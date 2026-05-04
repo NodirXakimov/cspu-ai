@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.ai-elements-vue.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:elements.ai-sdk.dev)",
+      "Bash(npm create:*)",
+      "Bash(cp -r D:/Nodir/Projects/cspu-ai-temp/* D:/Nodir/Projects/cspu-ai/)",
+      "Bash(cp D:/Nodir/Projects/cspu-ai-temp/.gitignore D:/Nodir/Projects/cspu-ai/)",
+      "Bash(rm -rf D:/Nodir/Projects/cspu-ai-temp)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn-vue@latest init -d)",
+      "Bash(npx ai-elements-vue@latest add conversation message prompt-input suggestion shimmer)",
+      "Bash(ls D:/Nodir/Projects/cspu-ai/src/components/*.vue)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(curl -s http://localhost:5174/src/main.ts)",
+      "Bash(curl -s http://localhost:5174/src/App.vue)",
+      "Bash(curl -s http://localhost:5174/src/components/ChatView.vue)",
+      "Bash(curl -s http://localhost:5174/src/components/MessageItem.vue)",
+      "Bash(curl -s http://localhost:5174/src/components/ChatSidebar.vue)",
+      "Bash(npx vite:*)"
+    ]
+  }
+}
