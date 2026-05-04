@@ -1,4 +1,5 @@
-import type { Chat, ChatMessage } from '@/types/chat'
+import type { Chat, ChatAttachment, ChatMessage } from '@/types/chat'
+import type { FileUIPart } from 'ai'
 import { useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
 import { computed } from 'vue'
@@ -75,19 +76,37 @@ export function useChats() {
     chats.value = [...chats.value]
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, files: FileUIPart[] = []) {
     let chatId = activeChatId.value
     if (!chatId) {
       const chat = createChat()
       chatId = chat.id
     }
 
-    addMessage(chatId, { role: 'user', content, type: 'text' })
+    const attachments: ChatAttachment[] = files.map(f => ({
+      url: f.url ?? '',
+      filename: f.filename ?? 'fayl',
+      mediaType: f.mediaType ?? 'application/octet-stream',
+    }))
+
+    const hasImages = attachments.some(a => a.mediaType.startsWith('image/'))
+    const messageType = hasImages ? 'image' as const : attachments.length > 0 ? 'file' as const : 'text' as const
+
+    addMessage(chatId, {
+      role: 'user',
+      content: content || (attachments.length > 0 ? `${attachments.length} ta fayl yuborildi` : ''),
+      type: messageType,
+      attachments: attachments.length > 0 ? attachments : undefined,
+    })
 
     // Simulate AI thinking delay
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
 
-    addMessage(chatId, { role: 'assistant', content: getRandomResponse(), type: 'text' })
+    const response = attachments.length > 0
+      ? `Rahmat! Men ${attachments.length} ta faylni qabul qildim. ${getRandomResponse()}`
+      : getRandomResponse()
+
+    addMessage(chatId, { role: 'assistant', content: response, type: 'text' })
   }
 
   return {

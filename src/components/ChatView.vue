@@ -9,14 +9,19 @@ import {
 } from '@/components/ai-elements/conversation'
 import {
   PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input'
+import { InputGroupAddon } from '@/components/ui/input-group'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { Shimmer } from '@/components/ai-elements/shimmer'
 import MessageItem from '@/components/MessageItem.vue'
+import AttachmentPreviews from '@/components/AttachmentPreviews.vue'
 import { BotIcon, MenuIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ref } from 'vue'
@@ -27,7 +32,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'send', content: string): void
+  (e: 'send', content: string, files: PromptInputMessage['files']): void
   (e: 'toggleSidebar'): void
 }>()
 
@@ -42,13 +47,15 @@ const isSubmitting = ref(false)
 
 async function handleSubmit(payload: PromptInputMessage) {
   const text = payload.text.trim()
-  if (!text || isSubmitting.value) return
+  const files = payload.files
+  if (!text && files.length === 0) return
+  if (isSubmitting.value) return
   isSubmitting.value = true
-  emit('send', text)
+  emit('send', text, files)
 }
 
 function handleSuggestionClick(suggestion: string) {
-  emit('send', suggestion)
+  emit('send', suggestion, [])
 }
 
 function onLoadingChange(loading: boolean) {
@@ -74,7 +81,7 @@ defineExpose({ onLoadingChange })
 
     <!-- Conversation area -->
     <Conversation class="flex-1" aria-label="Suhbat">
-      <ConversationContent>
+      <ConversationContent class="mx-auto w-full max-w-3xl">
         <template v-if="!chat || chat.messages.length === 0">
           <ConversationEmptyState
             title="CSPU AI ga xush kelibsiz!"
@@ -116,15 +123,33 @@ defineExpose({ onLoadingChange })
 
     <!-- Input area -->
     <div class="border-t border-border p-4">
-      <PromptInput @submit="handleSubmit" class="mx-auto max-w-3xl">
-        <PromptInputBody>
-          <PromptInputTextarea placeholder="Xabar yozing..." />
-        </PromptInputBody>
-        <PromptInputFooter>
-          <div class="flex-1" />
-          <PromptInputSubmit :disabled="isSubmitting" />
-        </PromptInputFooter>
-      </PromptInput>
+      <div class="mx-auto max-w-3xl">
+        <PromptInputProvider
+          @submit="handleSubmit"
+          accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.pptx,.zip"
+          :max-files="10"
+          :max-file-size="20 * 1024 * 1024"
+        >
+          <AttachmentPreviews class="mb-2" />
+          <PromptInput
+            accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.pptx,.zip"
+            :multiple="true"
+          >
+            <InputGroupAddon align="inline-start">
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionAddAttachments label="Rasm yoki fayl qo'shish" />
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
+            </InputGroupAddon>
+            <PromptInputTextarea placeholder="Xabar yozing..." />
+            <InputGroupAddon align="inline-end">
+              <PromptInputSubmit :disabled="isSubmitting" />
+            </InputGroupAddon>
+          </PromptInput>
+        </PromptInputProvider>
+      </div>
     </div>
   </div>
 </template>

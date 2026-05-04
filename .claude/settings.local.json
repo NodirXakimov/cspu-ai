@@ -23,7 +23,14 @@
       "Bash(curl -s http://localhost:5174/src/components/ChatView.vue)",
       "Bash(curl -s http://localhost:5174/src/components/MessageItem.vue)",
       "Bash(curl -s http://localhost:5174/src/components/ChatSidebar.vue)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "WebFetch(domain:cspu.uz)",
+      "Bash(curl -sL https://cspu.uz/)",
+      "Bash(grep -oP '\\(#[0-9a-fA-F]{3,8}|rgb[a]?\\\\\\([^\\)]+\\\\\\)|background[^;]*|color[^;]*\\)')",
+      "Bash(grep -oE '#[0-9a-fA-F]{3,8}')",
+      "Bash(curl -s http://localhost:5174/src/assets/index.css)",
+      "Bash(curl -s http://localhost:5174/src/components/ai-elements/prompt-input/PromptInputTextarea.vue)",
+      "Bash(curl -s http://localhost:5174/src/components/ui/textarea/Textarea.vue)"
     ]
   }
 }

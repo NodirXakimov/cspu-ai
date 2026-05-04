@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FileUIPart } from 'ai'
 import ChatSidebar from '@/components/ChatSidebar.vue'
 import ChatView from '@/components/ChatView.vue'
 import { useChats } from '@/composables/useChats'
@@ -18,9 +19,9 @@ const isLoading = ref(false)
 const sidebarOpen = ref(false)
 const chatViewRef = ref<InstanceType<typeof ChatView> | null>(null)
 
-async function handleSend(content: string) {
+async function handleSend(content: string, files: FileUIPart[] = []) {
   isLoading.value = true
-  await sendMessage(content)
+  await sendMessage(content, files)
   isLoading.value = false
   chatViewRef.value?.onLoadingChange(false)
 }

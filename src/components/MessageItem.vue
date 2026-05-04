@@ -7,7 +7,7 @@ import {
   MessageContent,
   MessageResponse,
 } from '@/components/ai-elements/message'
-import { CopyIcon, CheckIcon } from 'lucide-vue-next'
+import { CopyIcon, CheckIcon, FileIcon } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 const props = defineProps<{
@@ -21,28 +21,36 @@ async function copyContent() {
   copied.value = true
   setTimeout(() => (copied.value = false), 2000)
 }
+
+function isImage(mediaType: string): boolean {
+  return mediaType.startsWith('image/')
+}
 </script>
 
 <template>
   <Message :from="message.role">
     <MessageContent>
-      <template v-if="message.type === 'text'">
-        <MessageResponse :content="message.content" />
-      </template>
-      <template v-else-if="message.type === 'image'">
-        <img
-          v-if="message.metadata?.url"
-          :src="String(message.metadata.url)"
-          :alt="message.content"
-          class="max-w-sm rounded-lg"
-        />
-        <span v-else class="text-muted-foreground text-sm">Rasm yuklanmoqda...</span>
-      </template>
-      <template v-else>
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>{{ message.content }}</span>
-        </div>
-      </template>
+      <!-- Attachments -->
+      <div v-if="message.attachments?.length" class="flex flex-wrap gap-2">
+        <template v-for="att in message.attachments" :key="att.url">
+          <img
+            v-if="isImage(att.mediaType)"
+            :src="att.url"
+            :alt="att.filename"
+            class="max-h-48 max-w-xs rounded-lg object-cover"
+          />
+          <div
+            v-else
+            class="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2"
+          >
+            <FileIcon class="size-4 text-muted-foreground" />
+            <span class="text-xs truncate max-w-[160px]">{{ att.filename }}</span>
+          </div>
+        </template>
+      </div>
+
+      <!-- Text content -->
+      <MessageResponse v-if="message.content" :content="message.content" />
 
       <MessageActions v-if="message.role === 'assistant'">
         <MessageAction
