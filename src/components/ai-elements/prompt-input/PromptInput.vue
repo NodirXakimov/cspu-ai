@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue'
 import type { PromptInputMessage } from './types'
 import { InputGroup } from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
-import { getCurrentInstance, inject, onMounted, onUnmounted, ref } from 'vue'
+import { getCurrentInstance, inject, onMounted, onUnmounted } from 'vue'
 import { usePromptInputProvider } from './context'
 import { PROMPT_INPUT_KEY } from './types'
 
@@ -23,7 +23,6 @@ const emit = defineEmits<{
 }>()
 
 const instance = getCurrentInstance()
-const formRef = ref<HTMLFormElement | null>(null)
 
 function getListener(name: 'onSubmit' | 'onError') {
   return instance?.vnode.props?.[name]
@@ -74,7 +73,7 @@ if (!context) {
   throw new Error('PromptInput context is missing.')
 }
 
-const { fileInputRef, addFiles, submitForm } = context
+const { addFiles, submitForm } = context
 
 function handleDragOver(e: DragEvent) {
   if (e.dataTransfer?.types?.includes('Files')) {
