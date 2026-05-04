@@ -2,7 +2,7 @@
 import type { Chat } from '@/types/chat'
 import { Button } from '@/components/ui/button'
 import ThemeToggle from '@/components/ThemeToggle.vue'
-import { PlusIcon, Trash2Icon, BotIcon } from 'lucide-vue-next'
+import { PlusIcon, Trash2Icon } from 'lucide-vue-next'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 defineProps<{
@@ -34,8 +34,8 @@ function formatDate(timestamp: number): string {
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
       <div class="flex items-center gap-2">
-        <BotIcon class="size-6 text-sidebar-primary" />
-        <span class="text-lg font-semibold">CSPU AI</span>
+        <img src="/cspu-logo.png" alt="CSPU" class="h-8 w-auto" />
+        <span class="text-lg font-semibold">AI</span>
       </div>
       <Button variant="ghost" size="icon" @click="emit('newChat')" title="Yangi suhbat">
         <PlusIcon class="size-5" />
@@ -83,7 +83,7 @@ function formatDate(timestamp: number): string {
 
     <!-- Footer -->
     <div class="flex items-center justify-between border-t border-sidebar-border px-4 py-3">
-      <span class="text-xs text-muted-foreground">CSPU Universitet</span>
+      <span class="text-xs text-muted-foreground">CHDPU</span>
       <ThemeToggle />
     </div>
   </div>
