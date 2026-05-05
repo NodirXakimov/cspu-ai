@@ -14,6 +14,7 @@ import {
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
   PromptInputProvider,
+  PromptInputSpeechButton,
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input'
@@ -44,6 +45,14 @@ const suggestions = [
 ]
 
 const isSubmitting = ref(false)
+const hasText = ref(false)
+
+function onInputEvent(e: Event) {
+  const target = e.target as HTMLTextAreaElement
+  if (target?.tagName === 'TEXTAREA') {
+    hasText.value = target.value.trim().length > 0
+  }
+}
 
 async function handleSubmit(payload: PromptInputMessage) {
   const text = payload.text.trim()
@@ -51,6 +60,7 @@ async function handleSubmit(payload: PromptInputMessage) {
   if (!text && files.length === 0) return
   if (isSubmitting.value) return
   isSubmitting.value = true
+  hasText.value = false
   emit('send', text, files)
 }
 
@@ -131,23 +141,24 @@ defineExpose({ onLoadingChange })
           :max-file-size="20 * 1024 * 1024"
         >
           <AttachmentPreviews class="mb-2" />
-          <PromptInput
-            accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.pptx,.zip"
-            :multiple="true"
-          >
-            <InputGroupAddon align="inline-start">
-              <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger />
-                <PromptInputActionMenuContent>
-                  <PromptInputActionAddAttachments label="Rasm yoki fayl qo'shish" />
-                </PromptInputActionMenuContent>
-              </PromptInputActionMenu>
-            </InputGroupAddon>
-            <PromptInputTextarea placeholder="Xabar yozing..." />
-            <InputGroupAddon align="inline-end">
-              <PromptInputSubmit :disabled="isSubmitting" />
-            </InputGroupAddon>
-          </PromptInput>
+          <div class="[&_[data-slot=input-group]]:rounded-2xl" @input.capture="onInputEvent">
+            <PromptInput
+              accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.pptx,.zip"
+              :multiple="true"
+            >
+              <PromptInputTextarea placeholder="Xabar yozing..." />
+              <InputGroupAddon align="block-end" class="flex items-center justify-between">
+                <PromptInputActionMenu>
+                  <PromptInputActionMenuTrigger />
+                  <PromptInputActionMenuContent>
+                    <PromptInputActionAddAttachments label="Rasm yoki fayl qo'shish" />
+                  </PromptInputActionMenuContent>
+                </PromptInputActionMenu>
+                <PromptInputSubmit v-if="hasText" :disabled="isSubmitting" />
+                <PromptInputSpeechButton v-else />
+              </InputGroupAddon>
+            </PromptInput>
+          </div>
         </PromptInputProvider>
       </div>
     </div>
