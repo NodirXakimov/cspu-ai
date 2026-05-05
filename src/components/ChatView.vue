@@ -27,7 +27,7 @@ import { BotIcon, MenuIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ref } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   chat: Chat | null
   isLoading: boolean
 }>()
@@ -141,12 +141,12 @@ defineExpose({ onLoadingChange })
           :max-file-size="20 * 1024 * 1024"
         >
           <AttachmentPreviews class="mb-2" />
-          <div class="[&_[data-slot=input-group]]:rounded-2xl" @input.capture="onInputEvent">
+          <div class="**:data-[slot=input-group]:rounded-3xl **:data-[slot=input-group]:shadow-sm" @input.capture="onInputEvent">
             <PromptInput
               accept="image/*,.pdf,.doc,.docx,.txt,.xlsx,.pptx,.zip"
               :multiple="true"
             >
-              <PromptInputTextarea placeholder="Xabar yozing..." />
+              <PromptInputTextarea placeholder="Xabar yozing..." class="px-4 pt-3" />
               <InputGroupAddon align="block-end" class="flex items-center justify-between">
                 <PromptInputActionMenu>
                   <PromptInputActionMenuTrigger />
