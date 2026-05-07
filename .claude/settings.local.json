@@ -30,7 +30,9 @@
       "Bash(grep -oE '#[0-9a-fA-F]{3,8}')",
       "Bash(curl -s http://localhost:5174/src/assets/index.css)",
       "Bash(curl -s http://localhost:5174/src/components/ai-elements/prompt-input/PromptInputTextarea.vue)",
-      "Bash(curl -s http://localhost:5174/src/components/ui/textarea/Textarea.vue)"
+      "Bash(curl -s http://localhost:5174/src/components/ui/textarea/Textarea.vue)",
+      "Bash(ls -la /c/dev/Projects/cspu-ai/*.ts /c/dev/Projects/cspu-ai/*.js /c/dev/Projects/cspu-ai/*.config.*)",
+      "Bash(curl -s -X POST \"https://e0f0-84-54-115-138.ngrok-free.app/api/ask/stream\" -H \"Content-Type: application/json\" -H \"ngrok-skip-browser-warning: true\" -d '{\"prompt\": \"salom\"}')"
     ]
   }
 }

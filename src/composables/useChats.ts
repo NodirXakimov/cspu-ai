@@ -2,22 +2,9 @@ import type { Chat, ChatAttachment, ChatMessage } from '@/types/chat'
 import type { FileUIPart } from 'ai'
 import { useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
-const MOCK_RESPONSES = [
-  "Men sizga yordam berishga tayyorman! Iltimos, savolingizni batafsilroq yozing.",
-  "Bu juda qiziqarli savol! Keling, birga ko'rib chiqamiz...",
-  "Tushundim. Mana mening fikrim bu haqida...",
-  "Rahmat savolingiz uchun! Mana javobim...",
-  "Yaxshi savol! Bu mavzu bo'yicha quyidagilarni aytishim mumkin...",
-  "Albatta, bu haqida batafsil tushuntiraman...",
-  "Qiziqarli! Keling, bu masalani birga hal qilaylik.",
-  "Bu juda muhim mavzu. Mana mening tahlilim...",
-]
-
-function getRandomResponse(): string {
-  return MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)]
-}
+const API_URL = '/api/ask/stream'
 
 export function useChats() {
   const chats = useLocalStorage<Chat[]>('cspu-ai-chats', [])
@@ -76,6 +63,8 @@ export function useChats() {
     chats.value = [...chats.value]
   }
 
+  const isStreaming = ref(false)
+
   async function sendMessage(content: string, files: FileUIPart[] = []) {
     let chatId = activeChatId.value
     if (!chatId) {
@@ -92,27 +81,122 @@ export function useChats() {
     const hasImages = attachments.some(a => a.mediaType.startsWith('image/'))
     const messageType = hasImages ? 'image' as const : attachments.length > 0 ? 'file' as const : 'text' as const
 
+    const userContent = content || (attachments.length > 0 ? `${attachments.length} ta fayl yuborildi` : '')
+
     addMessage(chatId, {
       role: 'user',
-      content: content || (attachments.length > 0 ? `${attachments.length} ta fayl yuborildi` : ''),
+      content: userContent,
       type: messageType,
       attachments: attachments.length > 0 ? attachments : undefined,
     })
 
-    // Simulate AI thinking delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000))
+    const assistantMsgId = nanoid()
+    let streamedContent = ''
 
-    const response = attachments.length > 0
-      ? `Rahmat! Men ${attachments.length} ta faylni qabul qildim. ${getRandomResponse()}`
-      : getRandomResponse()
+    const chat = chats.value.find(c => c.id === chatId)
+    if (!chat) return
 
-    addMessage(chatId, { role: 'assistant', content: response, type: 'text' })
+    chat.messages.push({
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      type: 'text',
+      timestamp: Date.now(),
+    })
+    chat.updatedAt = Date.now()
+    chats.value = [...chats.value]
+
+    isStreaming.value = true
+
+    function updateAssistantMessage(content: string) {
+      const c = chats.value.find(c => c.id === chatId)
+      if (!c) return
+      const msg = c.messages.find(m => m.id === assistantMsgId)
+      if (!msg) return
+      msg.content = content
+      chats.value = [...chats.value]
+    }
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userContent }),
+      })
+
+      if (!response.ok) {
+        updateAssistantMessage('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.')
+        return
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) return
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+
+          // SSE format: extract JSON from "data: {...}" lines
+          const dataPayload = trimmed.startsWith('data:')
+            ? trimmed.slice(5).trim()
+            : trimmed
+
+          if (!dataPayload.startsWith('{')) continue
+
+          try {
+            const chunk = JSON.parse(dataPayload)
+            if (chunk.content) {
+              streamedContent += chunk.content
+              updateAssistantMessage(streamedContent)
+            }
+          } catch {
+            // Skip unparseable lines
+          }
+        }
+      }
+
+      // Process remaining buffer
+      const remaining = buffer.trim()
+      if (remaining) {
+        const dataPayload = remaining.startsWith('data:')
+          ? remaining.slice(5).trim()
+          : remaining
+        if (dataPayload.startsWith('{')) {
+          try {
+            const chunk = JSON.parse(dataPayload)
+            if (chunk.content) {
+              streamedContent += chunk.content
+              updateAssistantMessage(streamedContent)
+            }
+          } catch {
+            // Skip
+          }
+        }
+      }
+    } catch (error) {
+      updateAssistantMessage(streamedContent || 'Tarmoq xatoligi. Iltimos, internet aloqangizni tekshiring.')
+    } finally {
+      isStreaming.value = false
+    }
   }
 
   return {
     chats: sortedChats,
     activeChat,
     activeChatId,
+    isStreaming,
     createChat,
     deleteChat,
     setActiveChat,

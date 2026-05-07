@@ -9,20 +9,18 @@ const {
   chats,
   activeChat,
   activeChatId,
+  isStreaming,
   createChat,
   deleteChat,
   setActiveChat,
   sendMessage,
 } = useChats()
 
-const isLoading = ref(false)
 const sidebarOpen = ref(false)
 const chatViewRef = ref<InstanceType<typeof ChatView> | null>(null)
 
 async function handleSend(content: string, files: FileUIPart[] = []) {
-  isLoading.value = true
   await sendMessage(content, files)
-  isLoading.value = false
   chatViewRef.value?.onLoadingChange(false)
 }
 
@@ -85,7 +83,7 @@ watch(sidebarOpen, (open) => {
       <ChatView
         ref="chatViewRef"
         :chat="activeChat"
-        :is-loading="isLoading"
+        :is-loading="isStreaming"
         @send="handleSend"
         @toggle-sidebar="toggleSidebar"
       />

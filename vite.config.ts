@@ -10,5 +10,16 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
-  }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://e0f0-84-54-115-138.ngrok-free.app',
+        changeOrigin: true,
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
+      },
+    },
+  },
 })
