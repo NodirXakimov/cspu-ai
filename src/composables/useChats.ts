@@ -4,7 +4,9 @@ import { useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
 import { computed, ref } from 'vue'
 
-const API_URL = '/api/ask/stream'
+const API_URL = import.meta.env.DEV
+  ? '/api/ask/stream'
+  : 'https://e0f0-84-54-115-138.ngrok-free.app/api/ask/stream'
 
 export function useChats() {
   const chats = useLocalStorage<Chat[]>('cspu-ai-chats', [])
