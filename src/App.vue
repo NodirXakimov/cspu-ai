@@ -2,8 +2,12 @@
 import type { FileUIPart } from 'ai'
 import ChatSidebar from '@/components/ChatSidebar.vue'
 import ChatView from '@/components/ChatView.vue'
+import Toaster from '@/components/Toaster.vue'
 import { useChats } from '@/composables/useChats'
+import { useToast } from '@/composables/useToast'
 import { ref, watch } from 'vue'
+
+const { success, error: toastError } = useToast()
 
 const {
   chats,
@@ -14,6 +18,7 @@ const {
   deleteChat,
   setActiveChat,
   sendMessage,
+  sendVoiceMessage,
 } = useChats()
 
 const sidebarOpen = ref(false)
@@ -22,6 +27,10 @@ const chatViewRef = ref<InstanceType<typeof ChatView> | null>(null)
 async function handleSend(content: string, files: FileUIPart[] = []) {
   await sendMessage(content, files)
   chatViewRef.value?.onLoadingChange(false)
+}
+
+async function handleSendVoice(blob: Blob, filename: string) {
+  await sendVoiceMessage(blob, filename)
 }
 
 function handleNewChat() {
@@ -34,8 +43,15 @@ function handleSelectChat(id: string) {
   sidebarOpen.value = false
 }
 
-function handleDeleteChat(id: string) {
-  deleteChat(id)
+async function handleDeleteChat(id: string) {
+  const chat = chats.value.find(c => c.id === id)
+  const title = chat?.title ?? 'Suhbat'
+  const ok = await deleteChat(id)
+  if (ok) {
+    success(`"${title}" o'chirildi`)
+  } else {
+    toastError("Suhbatni o'chirib bo'lmadi. Qaytadan urinib ko'ring.")
+  }
 }
 
 function toggleSidebar() {
@@ -78,6 +94,8 @@ watch(sidebarOpen, (open) => {
       />
     </aside>
 
+    <Toaster />
+
     <!-- Main content -->
     <main class="flex-1 min-w-0">
       <ChatView
@@ -85,6 +103,7 @@ watch(sidebarOpen, (open) => {
         :chat="activeChat"
         :is-loading="isStreaming"
         @send="handleSend"
+        @send-voice="handleSendVoice"
         @toggle-sidebar="toggleSidebar"
       />
     </main>

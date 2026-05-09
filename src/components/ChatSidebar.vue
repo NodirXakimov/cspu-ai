@@ -4,8 +4,17 @@ import { Button } from '@/components/ui/button'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { PlusIcon, Trash2Icon } from 'lucide-vue-next'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { computed, ref } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   chats: Chat[]
   activeChatId: string | null
 }>()
@@ -15,6 +24,24 @@ const emit = defineEmits<{
   (e: 'selectChat', id: string): void
   (e: 'deleteChat', id: string): void
 }>()
+
+const pendingDeleteId = ref<string | null>(null)
+const dialogOpen = ref(false)
+
+const pendingDeleteChat = computed(() =>
+  props.chats.find(c => c.id === pendingDeleteId.value) ?? null,
+)
+
+function requestDelete(id: string) {
+  pendingDeleteId.value = id
+  dialogOpen.value = true
+}
+
+function confirmDelete() {
+  if (pendingDeleteId.value) emit('deleteChat', pendingDeleteId.value)
+  dialogOpen.value = false
+  pendingDeleteId.value = null
+}
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp)
@@ -72,7 +99,7 @@ function formatDate(timestamp: number): string {
               variant="ghost"
               size="icon"
               class="size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              @click.stop="emit('deleteChat', chat.id)"
+              @click.stop="requestDelete(chat.id)"
               title="O'chirish"
             >
               <Trash2Icon class="size-4 text-destructive" />
@@ -87,5 +114,27 @@ function formatDate(timestamp: number): string {
       <span class="text-xs text-muted-foreground">CHDPU</span>
       <ThemeToggle />
     </div>
+
+    <Dialog v-model:open="dialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Suhbatni o'chirish</DialogTitle>
+          <DialogDescription>
+            <span v-if="pendingDeleteChat">
+              <strong>"{{ pendingDeleteChat.title }}"</strong> suhbati va undagi barcha xabarlar butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.
+            </span>
+            <span v-else>Bu suhbat butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.</span>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" @click="dialogOpen = false">
+            Bekor qilish
+          </Button>
+          <Button variant="destructive" @click="confirmDelete">
+            O'chirish
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

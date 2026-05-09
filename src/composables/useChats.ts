@@ -3,7 +3,7 @@ import type { FileUIPart } from 'ai'
 import { useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
 import { computed, ref } from 'vue'
-import { createSession, getSession, listSessions, streamAsk } from '@/lib/api'
+import { askVoice, createSession, deleteSession, getSession, listSessions, streamAsk } from '@/lib/api'
 
 function sessionToChat(s: Session, messages: ChatMessage[] = []): Chat {
   return {
@@ -91,12 +91,24 @@ export function useChats() {
     activeChatId.value = null
   }
 
-  function deleteChat(id: string) {
-    // No delete API yet — remove locally; will reappear after a refresh.
+  async function deleteChat(id: string): Promise<boolean> {
+    // Optimistic UI: drop locally first, then call the server.
+    const previous = chats.value
+    const previousActive = activeChatId.value
     chats.value = chats.value.filter(c => c.id !== id)
     loadedSessionIds.delete(id)
     if (activeChatId.value === id) {
       activeChatId.value = chats.value[0]?.id ?? null
+    }
+    try {
+      await deleteSession(id)
+      return true
+    } catch (err) {
+      console.error('Failed to delete session', err)
+      // Roll back the optimistic removal so the user can retry.
+      chats.value = previous
+      activeChatId.value = previousActive
+      return false
     }
   }
 
@@ -254,6 +266,59 @@ export function useChats() {
     }
   }
 
+  async function sendVoiceMessage(blob: Blob, filename = 'recording.webm') {
+    isStreaming.value = true
+    try {
+      const { question, answer } = await askVoice(blob, filename)
+
+      let chatId = activeChatId.value
+      if (!chatId) {
+        try {
+          const session = await createSession(deriveTitle(question))
+          const chat = sessionToChat(session, [])
+          chats.value = [chat, ...chats.value]
+          chatId = session.id
+          activeChatId.value = chatId
+          loadedSessionIds.add(chatId)
+        } catch (err) {
+          console.error('Failed to create session for voice', err)
+          return
+        }
+      }
+
+      appendMessage(chatId, {
+        id: nanoid(),
+        role: 'user',
+        content: question,
+        type: 'audio',
+        timestamp: Date.now(),
+      })
+
+      appendMessage(chatId, {
+        id: nanoid(),
+        role: 'assistant',
+        content: answer,
+        type: 'text',
+        timestamp: Date.now(),
+      })
+    } catch (err) {
+      console.error('Voice ask failed', err)
+      // Surface error in current chat if there is one.
+      const chatId = activeChatId.value
+      if (chatId) {
+        appendMessage(chatId, {
+          id: nanoid(),
+          role: 'assistant',
+          content: "Ovozli savolni qayta ishlashda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
+          type: 'text',
+          timestamp: Date.now(),
+        })
+      }
+    } finally {
+      isStreaming.value = false
+    }
+  }
+
   if (!initialized) {
     initialized = true
     fetchSessions().then(() => {
@@ -278,6 +343,7 @@ export function useChats() {
     deleteChat,
     setActiveChat,
     sendMessage,
+    sendVoiceMessage,
     refreshSessions: fetchSessions,
   }
 }
