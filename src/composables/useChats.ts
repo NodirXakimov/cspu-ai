@@ -1,79 +1,128 @@
-import type { Chat, ChatAttachment, ChatMessage } from '@/types/chat'
+import type { Chat, ChatAttachment, ChatMessage, ServerMessage, Session } from '@/types/chat'
 import type { FileUIPart } from 'ai'
 import { useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
 import { computed, ref } from 'vue'
+import { createSession, getSession, listSessions, streamAsk } from '@/lib/api'
 
-const API_URL = import.meta.env.DEV
-  ? '/api/ask/stream'
-  : 'https://e0f0-84-54-115-138.ngrok-free.app/api/ask/stream'
+function sessionToChat(s: Session, messages: ChatMessage[] = []): Chat {
+  return {
+    id: s.id,
+    title: s.title,
+    messages,
+    createdAt: new Date(s.created_at).getTime(),
+    updatedAt: new Date(s.updated_at).getTime(),
+  }
+}
+
+function serverMessageToChatMessage(m: ServerMessage): ChatMessage {
+  return {
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    type: 'text',
+    timestamp: new Date(m.created_at).getTime(),
+  }
+}
+
+function deriveTitle(content: string): string {
+  const trimmed = content.trim()
+  if (!trimmed) return 'Yangi suhbat'
+  return trimmed.length > 40 ? `${trimmed.slice(0, 40)}...` : trimmed
+}
+
+// Module-level singleton state — keeps composable instances in sync.
+const chats = ref<Chat[]>([])
+const activeChatId = useLocalStorage<string | null>('cspu-ai-active-chat', null)
+const isStreaming = ref(false)
+const isLoadingChats = ref(false)
+const isLoadingMessages = ref(false)
+const loadedSessionIds = new Set<string>()
+
+let initialized = false
+
+async function fetchSessions() {
+  isLoadingChats.value = true
+  try {
+    const sessions = await listSessions()
+    const existingById = new Map(chats.value.map(c => [c.id, c]))
+    chats.value = sessions.map(s =>
+      sessionToChat(s, existingById.get(s.id)?.messages ?? []),
+    )
+  } catch (err) {
+    console.error('Failed to load sessions', err)
+  } finally {
+    isLoadingChats.value = false
+  }
+}
+
+async function fetchMessages(sessionId: string) {
+  if (loadedSessionIds.has(sessionId)) return
+  isLoadingMessages.value = true
+  try {
+    const data = await getSession(sessionId)
+    const chat = chats.value.find(c => c.id === sessionId)
+    if (chat) {
+      chat.messages = (data.messages ?? []).map(serverMessageToChatMessage)
+      chat.title = data.session.title
+      chat.updatedAt = new Date(data.session.updated_at).getTime()
+      chats.value = [...chats.value]
+    }
+    loadedSessionIds.add(sessionId)
+  } catch (err) {
+    console.error('Failed to load messages', err)
+  } finally {
+    isLoadingMessages.value = false
+  }
+}
 
 export function useChats() {
-  const chats = useLocalStorage<Chat[]>('cspu-ai-chats', [])
-  const activeChatId = useLocalStorage<string | null>('cspu-ai-active-chat', null)
+  const sortedChats = computed(() =>
+    [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt),
+  )
 
   const activeChat = computed(() =>
-    chats.value.find(c => c.id === activeChatId.value) ?? null
+    chats.value.find(c => c.id === activeChatId.value) ?? null,
   )
 
-  const sortedChats = computed(() =>
-    [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt)
-  )
-
-  function createChat(): Chat {
-    const chat: Chat = {
-      id: nanoid(),
-      title: 'Yangi suhbat',
-      messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-    chats.value = [chat, ...chats.value]
-    activeChatId.value = chat.id
-    return chat
+  function newChat() {
+    // Defer actual session creation until the user sends the first message,
+    // so we can use that message as the title.
+    activeChatId.value = null
   }
 
   function deleteChat(id: string) {
+    // No delete API yet — remove locally; will reappear after a refresh.
     chats.value = chats.value.filter(c => c.id !== id)
+    loadedSessionIds.delete(id)
     if (activeChatId.value === id) {
       activeChatId.value = chats.value[0]?.id ?? null
     }
   }
 
-  function setActiveChat(id: string) {
+  async function setActiveChat(id: string) {
     activeChatId.value = id
+    await fetchMessages(id)
   }
 
-  function addMessage(chatId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>) {
+  function appendMessage(chatId: string, message: ChatMessage) {
     const chat = chats.value.find(c => c.id === chatId)
     if (!chat) return
-
-    const newMessage: ChatMessage = {
-      ...message,
-      id: nanoid(),
-      timestamp: Date.now(),
-    }
-    chat.messages.push(newMessage)
+    chat.messages.push(message)
     chat.updatedAt = Date.now()
-
-    // Auto-generate title from first user message
-    if (message.role === 'user' && chat.messages.filter(m => m.role === 'user').length === 1) {
-      chat.title = message.content.slice(0, 40) + (message.content.length > 40 ? '...' : '')
-    }
-
-    // Trigger reactivity
     chats.value = [...chats.value]
   }
 
-  const isStreaming = ref(false)
+  function updateMessageContent(chatId: string, messageId: string, content: string) {
+    const chat = chats.value.find(c => c.id === chatId)
+    if (!chat) return
+    const msg = chat.messages.find(m => m.id === messageId)
+    if (!msg) return
+    msg.content = content
+    chats.value = [...chats.value]
+  }
 
   async function sendMessage(content: string, files: FileUIPart[] = []) {
-    let chatId = activeChatId.value
-    if (!chatId) {
-      const chat = createChat()
-      chatId = chat.id
-    }
-
     const attachments: ChatAttachment[] = files.map(f => ({
       url: f.url ?? '',
       filename: f.filename ?? 'fayl',
@@ -81,117 +130,141 @@ export function useChats() {
     }))
 
     const hasImages = attachments.some(a => a.mediaType.startsWith('image/'))
-    const messageType = hasImages ? 'image' as const : attachments.length > 0 ? 'file' as const : 'text' as const
+    const messageType: ChatMessage['type'] = hasImages
+      ? 'image'
+      : attachments.length > 0
+        ? 'file'
+        : 'text'
 
-    const userContent = content || (attachments.length > 0 ? `${attachments.length} ta fayl yuborildi` : '')
+    const userContent =
+      content || (attachments.length > 0 ? `${attachments.length} ta fayl yuborildi` : '')
 
-    addMessage(chatId, {
+    if (!userContent) return
+
+    // Create a server session on demand (first message of a new chat).
+    let chatId = activeChatId.value
+    if (!chatId) {
+      try {
+        const session = await createSession(deriveTitle(userContent))
+        const chat = sessionToChat(session, [])
+        chats.value = [chat, ...chats.value]
+        chatId = session.id
+        activeChatId.value = chatId
+        loadedSessionIds.add(chatId)
+      } catch (err) {
+        console.error('Failed to create session', err)
+        return
+      }
+    }
+
+    appendMessage(chatId, {
+      id: nanoid(),
       role: 'user',
       content: userContent,
       type: messageType,
+      timestamp: Date.now(),
       attachments: attachments.length > 0 ? attachments : undefined,
     })
 
-    const assistantMsgId = nanoid()
-    let streamedContent = ''
-
-    const chat = chats.value.find(c => c.id === chatId)
-    if (!chat) return
-
-    chat.messages.push({
-      id: assistantMsgId,
+    const assistantId = nanoid()
+    appendMessage(chatId, {
+      id: assistantId,
       role: 'assistant',
       content: '',
       type: 'text',
       timestamp: Date.now(),
     })
-    chat.updatedAt = Date.now()
-    chats.value = [...chats.value]
 
     isStreaming.value = true
+    let streamedContent = ''
+    let finished = false
 
-    function updateAssistantMessage(content: string) {
-      const c = chats.value.find(c => c.id === chatId)
-      if (!c) return
-      const msg = c.messages.find(m => m.id === assistantMsgId)
-      if (!msg) return
-      msg.content = content
-      chats.value = [...chats.value]
+    const processLine = (line: string): boolean => {
+      const trimmed = line.trim()
+      if (!trimmed) return false
+      const payload = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed
+      if (!payload) return false
+
+      // Common end-of-stream sentinel ("[DONE]", "DONE", etc.)
+      if (payload === '[DONE]' || payload.toUpperCase() === 'DONE') return true
+
+      if (!payload.startsWith('{')) return false
+      try {
+        const chunk = JSON.parse(payload)
+        if (typeof chunk.content === 'string') {
+          streamedContent += chunk.content
+          updateMessageContent(chatId!, assistantId, streamedContent)
+        }
+        // Honor any explicit completion flag from the server.
+        if (chunk.done === true || chunk.finished === true || chunk.event === 'done') {
+          return true
+        }
+      } catch {
+        // skip unparseable lines
+      }
+      return false
     }
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userContent }),
-      })
-
-      if (!response.ok) {
-        updateAssistantMessage('Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.')
+      const response = await streamAsk(chatId, userContent)
+      if (!response.ok || !response.body) {
+        updateMessageContent(
+          chatId,
+          assistantId,
+          "Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
+        )
         return
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) return
-
+      const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
 
-      while (true) {
+      while (!finished) {
         const { done, value } = await reader.read()
         if (done) break
-
         buffer += decoder.decode(value, { stream: true })
-
         const lines = buffer.split('\n')
         buffer = lines.pop() ?? ''
-
         for (const line of lines) {
-          const trimmed = line.trim()
-          if (!trimmed) continue
-
-          // SSE format: extract JSON from "data: {...}" lines
-          const dataPayload = trimmed.startsWith('data:')
-            ? trimmed.slice(5).trim()
-            : trimmed
-
-          if (!dataPayload.startsWith('{')) continue
-
-          try {
-            const chunk = JSON.parse(dataPayload)
-            if (chunk.content) {
-              streamedContent += chunk.content
-              updateAssistantMessage(streamedContent)
-            }
-          } catch {
-            // Skip unparseable lines
+          if (processLine(line)) {
+            finished = true
+            break
           }
         }
       }
+      if (!finished && buffer.trim()) processLine(buffer)
 
-      // Process remaining buffer
-      const remaining = buffer.trim()
-      if (remaining) {
-        const dataPayload = remaining.startsWith('data:')
-          ? remaining.slice(5).trim()
-          : remaining
-        if (dataPayload.startsWith('{')) {
-          try {
-            const chunk = JSON.parse(dataPayload)
-            if (chunk.content) {
-              streamedContent += chunk.content
-              updateAssistantMessage(streamedContent)
-            }
-          } catch {
-            // Skip
-          }
-        }
+      // Close the reader so the underlying connection releases even if the
+      // server keeps the stream open after sending its final chunk.
+      try {
+        await reader.cancel()
+      } catch {
+        /* ignore */
       }
-    } catch (error) {
-      updateAssistantMessage(streamedContent || 'Tarmoq xatoligi. Iltimos, internet aloqangizni tekshiring.')
+    } catch (err) {
+      console.error('Stream failed', err)
+      updateMessageContent(
+        chatId,
+        assistantId,
+        streamedContent || "Tarmoq xatoligi. Iltimos, internet aloqangizni tekshiring.",
+      )
     } finally {
       isStreaming.value = false
     }
+  }
+
+  if (!initialized) {
+    initialized = true
+    fetchSessions().then(() => {
+      // If active chat was persisted, hydrate its messages.
+      if (activeChatId.value && chats.value.some(c => c.id === activeChatId.value)) {
+        fetchMessages(activeChatId.value)
+      } else if (activeChatId.value) {
+        // Stale id from a chat that no longer exists on the server.
+        activeChatId.value = null
+      }
+    })
   }
 
   return {
@@ -199,10 +272,12 @@ export function useChats() {
     activeChat,
     activeChatId,
     isStreaming,
-    createChat,
+    isLoadingChats,
+    isLoadingMessages,
+    createChat: newChat,
     deleteChat,
     setActiveChat,
-    addMessage,
     sendMessage,
+    refreshSessions: fetchSessions,
   }
 }
