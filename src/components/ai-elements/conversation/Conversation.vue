@@ -2,6 +2,7 @@
 import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
 import { reactiveOmit } from '@vueuse/core'
+import { ref } from 'vue'
 import { StickToBottom } from 'vue-stick-to-bottom'
 
 interface Props {
@@ -24,10 +25,18 @@ const props = withDefaults(defineProps<Props>(), {
   anchor: 'none',
 })
 const delegatedProps = reactiveOmit(props, 'class')
+
+const stbRef = ref<InstanceType<typeof StickToBottom> | null>(null)
+
+defineExpose({
+  scrollToBottom: (opts?: Parameters<NonNullable<InstanceType<typeof StickToBottom>['scrollToBottom']>>[0]) =>
+    stbRef.value?.scrollToBottom(opts),
+})
 </script>
 
 <template>
   <StickToBottom
+    ref="stbRef"
     v-bind="delegatedProps"
     :class="cn('relative flex-1 overflow-y-hidden', props.class)"
     role="log"

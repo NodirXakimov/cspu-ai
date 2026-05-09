@@ -25,7 +25,7 @@ import MessageItem from '@/components/MessageItem.vue'
 import AttachmentPreviews from '@/components/AttachmentPreviews.vue'
 import { BotIcon, MenuIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 defineProps<{
   chat: Chat | null
@@ -46,6 +46,12 @@ const suggestions = [
 
 const isSubmitting = ref(false)
 const hasText = ref(false)
+const conversationRef = ref<InstanceType<typeof Conversation> | null>(null)
+
+async function scrollToLatest() {
+  await nextTick()
+  conversationRef.value?.scrollToBottom()
+}
 
 function onInputEvent(e: Event) {
   const target = e.target as HTMLTextAreaElement
@@ -62,10 +68,12 @@ async function handleSubmit(payload: PromptInputMessage) {
   isSubmitting.value = true
   hasText.value = false
   emit('send', text, files)
+  scrollToLatest()
 }
 
 function handleSuggestionClick(suggestion: string) {
   emit('send', suggestion, [])
+  scrollToLatest()
 }
 
 function onLoadingChange(loading: boolean) {
@@ -90,7 +98,7 @@ defineExpose({ onLoadingChange })
     </div>
 
     <!-- Conversation area -->
-    <Conversation class="flex-1" aria-label="Suhbat">
+    <Conversation ref="conversationRef" class="flex-1" aria-label="Suhbat">
       <ConversationContent class="mx-auto w-full max-w-3xl">
         <template v-if="!chat || chat.messages.length === 0">
           <ConversationEmptyState

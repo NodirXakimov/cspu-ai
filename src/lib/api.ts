@@ -9,11 +9,16 @@ interface SessionDetailResponse {
   messages: ServerMessage[]
 }
 
+const COMMON_HEADERS = {
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': 'true',
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      ...COMMON_HEADERS,
       ...(init?.headers ?? {}),
     },
   })
@@ -39,7 +44,7 @@ export function createSession(title: string): Promise<Session> {
 export function streamAsk(sessionId: string, prompt: string): Promise<Response> {
   return fetch(`${API_BASE}/ask/stream`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: COMMON_HEADERS,
     body: JSON.stringify({ session_id: sessionId, prompt }),
   })
 }
