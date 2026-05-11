@@ -112,10 +112,17 @@ const TODAY_KEY = ymdLocal(today)
 const selectedDate = ref<string>(TODAY_KEY)
 const isToday = computed(() => selectedDate.value === TODAY_KEY)
 
-const totalTeachers = computed(() => Math.max(20, Math.round(TOTAL_TEACHERS_BASE * scale.value)))
+// Bumps every 10s so all derived data re-rolls.
+const tick = ref(0)
+
+const totalTeachers = computed(() => {
+  const base = TOTAL_TEACHERS_BASE * scale.value
+  const drift = (hash01(`${selectedFacultyId.value}:tt:${tick.value}`) - 0.5) * 4
+  return Math.max(20, Math.round(base + drift))
+})
 
 const lateTeachers = computed<LateTeacher[]>(() => {
-  const seed = `${selectedFacultyId.value}:${selectedDate.value}`
+  const seed = `${selectedFacultyId.value}:${selectedDate.value}:${tick.value}`
   const r = hash01(seed)
   const count = Math.max(2, Math.round(ALL_LATE_TEACHERS.length * (0.45 + r * 0.45)))
   const start = Math.floor(hash01(`${seed}:start`) * ALL_LATE_TEACHERS.length)
@@ -144,9 +151,13 @@ const selectedDateLabel = computed(() => {
 const TOTAL_STUDENTS_BASE = 2847
 const PAID_RATE_BASE = 0.918
 
-const totalStudents = computed(() => Math.round(TOTAL_STUDENTS_BASE * scale.value))
+const totalStudents = computed(() => {
+  const base = TOTAL_STUDENTS_BASE * scale.value
+  const drift = (hash01(`${selectedFacultyId.value}:ts:${tick.value}`) - 0.5) * 20
+  return Math.round(base + drift)
+})
 const paidRate = computed(() => {
-  const drift = (hash01(`${selectedFacultyId.value}:pay`) - 0.5) * 0.08
+  const drift = (hash01(`${selectedFacultyId.value}:pay:${tick.value}`) - 0.5) * 0.08
   return Math.min(0.985, Math.max(0.78, PAID_RATE_BASE + drift))
 })
 const studentsPaid = computed(() => Math.round(totalStudents.value * paidRate.value))
@@ -181,10 +192,14 @@ const PERIOD_DATA: Record<Period, { labels: string[]; values: number[] }> = {
 
 const attendanceSeries = computed(() => {
   const base = PERIOD_DATA[period.value]
-  const drift = Math.round((hash01(`${selectedFacultyId.value}:att`) - 0.5) * 6)
+  const facultyDrift = Math.round((hash01(`${selectedFacultyId.value}:att`) - 0.5) * 6)
+  const seed = `${selectedFacultyId.value}:${period.value}:${tick.value}`
   return {
     labels: base.labels,
-    values: base.values.map(v => Math.min(99, Math.max(60, v + drift))),
+    values: base.values.map((v, i) => {
+      const liveDrift = Math.round((hash01(`${seed}:${i}`) - 0.5) * 6)
+      return Math.min(99, Math.max(60, v + facultyDrift + liveDrift))
+    }),
   }
 })
 const todayAttendance = computed(() => {
@@ -219,7 +234,7 @@ const GRADE_META = [
 ]
 
 const grades = computed(() => {
-  const seed = `${selectedFacultyId.value}:${selectedYear.value}:${selectedSemester.value}`
+  const seed = `${selectedFacultyId.value}:${selectedYear.value}:${selectedSemester.value}:${tick.value}`
   const r1 = hash01(`${seed}:a`)
   const r2 = hash01(`${seed}:b`)
   const total = Math.round(totalStudents.value)
@@ -237,14 +252,19 @@ const gpa = computed(() => {
   return (sum / totalGraded.value).toFixed(2)
 })
 
-// ---------- Clock ----------
+// ---------- Clock + 10s live refresh ----------
 const now = ref(new Date())
 let clockTimer: number | null = null
+let liveTimer: number | null = null
 onMounted(() => {
   clockTimer = window.setInterval(() => (now.value = new Date()), 1000)
+  liveTimer = window.setInterval(() => {
+    tick.value++
+  }, 10_000)
 })
 onUnmounted(() => {
   if (clockTimer !== null) clearInterval(clockTimer)
+  if (liveTimer !== null) clearInterval(liveTimer)
 })
 const clockText = computed(() =>
   now.value.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -476,9 +496,9 @@ function fmt(n: number): string {
           </select>
         </label>
 
-        <div class="hidden items-center gap-2 text-xs text-slate-500 dark:text-slate-400 lg:flex">
+        <div class="hidden items-center gap-2 text-xs text-slate-500 dark:text-slate-400 lg:flex" :title="`Yangilangan: #${tick}`">
           <span class="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-          Jonli
+          Jonli · 10s
         </div>
         <div class="text-right">
           <div class="font-mono text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 sm:text-lg">{{ clockText }}</div>
