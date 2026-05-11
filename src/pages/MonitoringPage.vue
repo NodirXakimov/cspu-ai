@@ -36,14 +36,24 @@ use([
 const FACULTY_NAME = 'Pedagogika fakulteti'
 
 const TOTAL_TEACHERS = 142
-const LATE_TEACHERS = [
-  { name: 'Karimov A.',  subject: 'Bolalar pedagogikasi',          lateBy: 12 },
-  { name: 'Rahimov B.',  subject: 'Tasviriy faoliyat metodikasi',  lateBy: 8  },
-  { name: 'Yusupova D.', subject: 'Falsafa',                        lateBy: 15 },
-  { name: 'Nafasov A.',  subject: 'Pedagogik psixologiya',          lateBy: 5  },
-  { name: 'Jurayev H.',  subject: 'Axborot madaniyati',             lateBy: 22 },
-  { name: 'Imamova U.',  subject: 'Mediasavodxonlik',               lateBy: 4  },
-  { name: 'Kadirova X.', subject: 'Maktabgacha ta\'lim metodikasi', lateBy: 9  },
+type LessonType = "Ma'ruza" | 'Amaliy' | 'Laboratoriya' | 'Seminar'
+
+interface LateTeacher {
+  name: string
+  group: string
+  subject: string
+  lessonType: LessonType
+  lateBy: number
+}
+
+const LATE_TEACHERS: LateTeacher[] = [
+  { name: 'Karimov A.',  group: 'MAT 24/1', subject: 'Bolalar pedagogikasi',          lessonType: "Ma'ruza", lateBy: 12 },
+  { name: 'Rahimov B.',  group: 'TSV 23/2', subject: 'Tasviriy faoliyat metodikasi',  lessonType: 'Amaliy',  lateBy: 8  },
+  { name: 'Yusupova D.', group: 'FIL 24/3', subject: 'Falsafa',                       lessonType: "Ma'ruza", lateBy: 15 },
+  { name: 'Nafasov A.',  group: 'PSI 23/1', subject: 'Pedagogik psixologiya',         lessonType: 'Seminar', lateBy: 5  },
+  { name: 'Jurayev H.',  group: 'INF 24/2', subject: 'Axborot madaniyati',            lessonType: 'Amaliy',  lateBy: 22 },
+  { name: 'Imamova U.',  group: 'MED 23/1', subject: 'Mediasavodxonlik',              lessonType: "Ma'ruza", lateBy: 4  },
+  { name: 'Kadirova X.', group: 'MTM 24/4', subject: "Maktabgacha ta'lim metodikasi", lessonType: 'Amaliy',  lateBy: 9  },
 ]
 const lateCount = LATE_TEACHERS.length
 const punctualityPct = Math.round(((TOTAL_TEACHERS - lateCount) / TOTAL_TEACHERS) * 100)
@@ -305,12 +315,34 @@ function fmt(n: number): string {
                 <li
                   v-for="t in LATE_TEACHERS"
                   :key="t.name"
-                  class="flex items-center gap-3 border-b border-slate-800/60 px-4 py-2 last:border-b-0"
+                  class="flex items-center gap-3 border-b border-slate-800/60 px-4 py-2.5 last:border-b-0"
                 >
                   <span class="size-2 shrink-0 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]" />
                   <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-medium text-slate-200">{{ t.name }}</div>
-                    <div class="truncate text-[11px] text-slate-500">{{ t.subject }}</div>
+                    <div class="flex items-center gap-2">
+                      <span class="truncate text-sm font-semibold text-slate-100">{{ t.name }}</span>
+                      <span class="shrink-0 rounded-md border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-sky-300">
+                        {{ t.group }}
+                      </span>
+                    </div>
+                    <div class="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+                      <span class="truncate">{{ t.subject }}</span>
+                      <span class="text-slate-700">·</span>
+                      <span
+                        :class="[
+                          'shrink-0 rounded px-1 py-px text-[10px] font-medium uppercase tracking-wider',
+                          t.lessonType === 'Ma\'ruza'
+                            ? 'bg-violet-500/15 text-violet-300'
+                            : t.lessonType === 'Amaliy'
+                              ? 'bg-emerald-500/15 text-emerald-300'
+                              : t.lessonType === 'Laboratoriya'
+                                ? 'bg-amber-500/15 text-amber-300'
+                                : 'bg-slate-500/15 text-slate-300',
+                        ]"
+                      >
+                        {{ t.lessonType }}
+                      </span>
+                    </div>
                   </div>
                   <span class="shrink-0 rounded-md bg-rose-500/15 px-2 py-0.5 font-mono text-xs font-semibold text-rose-300 tabular-nums">
                     +{{ t.lateBy }}m
