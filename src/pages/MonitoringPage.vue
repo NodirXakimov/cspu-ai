@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -537,7 +538,9 @@ function fmt(n: number): string {
     <div class="grid grid-cols-1 gap-3 p-3 lg:h-[calc(100vh-3.5rem)] lg:grid-cols-2 lg:grid-rows-2">
 
       <!-- Q1: Teachers' Discipline -->
-      <section class="flex min-h-[520px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none sm:p-5 lg:min-h-0 lg:overflow-hidden">
+      <RouterLink
+        to="/monitoring/teachers"
+        class="group flex min-h-[520px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none dark:hover:border-sky-500/50 dark:hover:bg-slate-700/60 sm:p-5 lg:min-h-0 lg:overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-600 dark:text-sky-400" />
@@ -545,7 +548,7 @@ function fmt(n: number): string {
               {{ t('q1.title') }}
             </h2>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2" @click.stop>
             <label class="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800/60">
               <CalendarIcon class="size-3.5 text-slate-500 dark:text-slate-400" />
               <input
@@ -626,10 +629,12 @@ function fmt(n: number): string {
             </div>
           </div>
         </div>
-      </section>
+      </RouterLink>
 
       <!-- Q2: Financial -->
-      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none sm:p-5 lg:min-h-0 lg:overflow-hidden">
+      <RouterLink
+        to="/monitoring/finance"
+        class="group flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none dark:hover:border-amber-500/50 dark:hover:bg-slate-700/60 sm:p-5 lg:min-h-0 lg:overflow-hidden">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <WalletIcon class="size-4 text-amber-600 dark:text-amber-400" />
@@ -673,16 +678,18 @@ function fmt(n: number): string {
             </div>
           </div>
         </div>
-      </section>
+      </RouterLink>
 
       <!-- Q3: Attendance -->
-      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none sm:p-5 lg:min-h-0 lg:overflow-hidden">
+      <RouterLink
+        to="/monitoring/attendance"
+        class="group flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none dark:hover:border-sky-500/50 dark:hover:bg-slate-700/60 sm:p-5 lg:min-h-0 lg:overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-600 dark:text-sky-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q3.title') }}</h2>
           </div>
-          <div class="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-800/60">
+          <div class="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-800/60" @click.stop>
             <button
               v-for="p in (['week', 'month', 'semester'] as const)"
               :key="p"
@@ -692,7 +699,7 @@ function fmt(n: number): string {
                   ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300'
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
               ]"
-              @click="period = p"
+              @click.prevent.stop="period = p"
             >
               {{ periodLabel(p) }}
             </button>
@@ -735,16 +742,18 @@ function fmt(n: number): string {
         <div class="mt-4 min-h-[220px] flex-1">
           <VChart :option="attendanceOption" autoresize class="h-full min-h-[200px] w-full" />
         </div>
-      </section>
+      </RouterLink>
 
       <!-- Q4: Academic Performance -->
-      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none sm:p-5 lg:min-h-0 lg:overflow-hidden">
+      <RouterLink
+        to="/monitoring/performance"
+        class="group flex min-h-[480px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-700/40 dark:shadow-none dark:hover:border-violet-500/50 dark:hover:bg-slate-700/60 sm:p-5 lg:min-h-0 lg:overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <GraduationCapIcon class="size-4 text-violet-600 dark:text-violet-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q4.title') }}</h2>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2" @click.stop>
             <select
               v-model="selectedYear"
               class="cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-800 focus:outline-none dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200"
@@ -795,7 +804,7 @@ function fmt(n: number): string {
         <div class="mt-4 min-h-[220px] flex-1">
           <VChart :option="performanceOption" autoresize class="h-full min-h-[200px] w-full" />
         </div>
-      </section>
+      </RouterLink>
     </div>
   </div>
 </template>

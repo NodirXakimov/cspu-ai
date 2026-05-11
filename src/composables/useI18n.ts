@@ -78,6 +78,26 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     'sem.1': '1-semestr',
     'sem.2': '2-semestr',
+
+    'td.back':           'Boshqaruv paneli',
+    'td.title':          "O'qituvchilar intizomi",
+    'td.search':         'Ism bo\'yicha qidirish',
+    'td.search.ph':      "F.I.Sh kiriting...",
+    'td.all_faculties':  'Barcha fakultetlar',
+    'td.all_subjects':   'Barcha fanlar',
+    'td.subject':        'Fan',
+    'td.date':           'Sana',
+    'td.no_results':     'Hech narsa topilmadi',
+    'td.scheduled':      'Dars vaqti',
+    'td.status.present': 'Vaqtida',
+    'td.status.late':    'Kech kelgan',
+    'td.status.absent':  'Kelmagan',
+    'td.late_by':        '{m} daqiqa',
+    'td.results':        '{n} ta natija',
+
+    'stub.title':    'Yaqinda',
+    'stub.subtitle': 'Bu bo\'lim hozircha tayyorlanmoqda',
+    'stub.back':     'Orqaga',
   },
 
   'uz-cyrl': {
@@ -146,6 +166,26 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     'sem.1': '1-семестр',
     'sem.2': '2-семестр',
+
+    'td.back':           'Бошқарув панели',
+    'td.title':          'Ўқитувчилар интизоми',
+    'td.search':         'Исм бўйича қидириш',
+    'td.search.ph':      'Ф.И.Ш киритинг...',
+    'td.all_faculties':  'Барча факультетлар',
+    'td.all_subjects':   'Барча фанлар',
+    'td.subject':        'Фан',
+    'td.date':           'Сана',
+    'td.no_results':     'Ҳеч нарса топилмади',
+    'td.scheduled':      'Дарс вақти',
+    'td.status.present': 'Вақтида',
+    'td.status.late':    'Кеч келган',
+    'td.status.absent':  'Келмаган',
+    'td.late_by':        '{m} дақиқа',
+    'td.results':        '{n} та натижа',
+
+    'stub.title':    'Яқинда',
+    'stub.subtitle': 'Бу бўлим ҳозирча тайёрланмоқда',
+    'stub.back':     'Орқага',
   },
 
   en: {
@@ -214,6 +254,26 @@ const TRANSLATIONS: Record<Lang, Dict> = {
 
     'sem.1': 'Semester 1',
     'sem.2': 'Semester 2',
+
+    'td.back':           'Dashboard',
+    'td.title':          'Teacher Discipline',
+    'td.search':         'Search by name',
+    'td.search.ph':      'Enter teacher name...',
+    'td.all_faculties':  'All faculties',
+    'td.all_subjects':   'All subjects',
+    'td.subject':        'Subject',
+    'td.date':           'Date',
+    'td.no_results':     'No teachers found',
+    'td.scheduled':      'Scheduled',
+    'td.status.present': 'On time',
+    'td.status.late':    'Late',
+    'td.status.absent':  'Absent',
+    'td.late_by':        '{m} min',
+    'td.results':        '{n} results',
+
+    'stub.title':    'Coming soon',
+    'stub.subtitle': 'This section is under construction',
+    'stub.back':     'Back',
   },
 }
 
