@@ -23,6 +23,7 @@ import {
 } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useTheme } from '@/composables/useTheme'
+import { LANGS, useI18n } from '@/composables/useI18n'
 
 use([
   CanvasRenderer,
@@ -37,27 +38,27 @@ use([
 ])
 
 const { isDark } = useTheme()
+const { lang, locale, t } = useI18n()
 
-// ---------- Faculties (Chirchiq davlat pedagogika universiteti) ----------
+// ---------- Faculties (Chirchiq State Pedagogical University) ----------
 interface Faculty {
   id: string
-  name: string
   scale: number
 }
 
 const FACULTIES: Faculty[] = [
-  { id: 'ped',  name: 'Pedagogika fakulteti',                       scale: 1.00 },
-  { id: 'mtm',  name: "Maktabgacha ta'lim fakulteti",               scale: 0.78 },
-  { id: 'bot',  name: "Boshlang'ich ta'lim fakulteti",              scale: 0.92 },
-  { id: 'tsv',  name: "Tasviriy san'at va muhandislik grafikasi",   scale: 0.55 },
-  { id: 'jis',  name: 'Jismoniy madaniyat fakulteti',               scale: 0.84 },
-  { id: 'spe',  name: 'Maxsus pedagogika fakulteti',                scale: 0.46 },
-  { id: 'mus',  name: "Musiqa ta'limi fakulteti",                   scale: 0.40 },
-  { id: 'fil',  name: 'Filologiya fakulteti',                       scale: 1.05 },
-  { id: 'tar',  name: 'Tarix fakulteti',                            scale: 0.62 },
-  { id: 'tab',  name: 'Tabiiy fanlar fakulteti',                    scale: 0.71 },
-  { id: 'mat',  name: 'Matematika va informatika fakulteti',        scale: 0.88 },
-  { id: 'tur',  name: 'Turizm fakulteti',                           scale: 0.50 },
+  { id: 'ped', scale: 1.00 },
+  { id: 'mtm', scale: 0.78 },
+  { id: 'bot', scale: 0.92 },
+  { id: 'tsv', scale: 0.55 },
+  { id: 'jis', scale: 0.84 },
+  { id: 'spe', scale: 0.46 },
+  { id: 'mus', scale: 0.40 },
+  { id: 'fil', scale: 1.05 },
+  { id: 'tar', scale: 0.62 },
+  { id: 'tab', scale: 0.71 },
+  { id: 'mat', scale: 0.88 },
+  { id: 'tur', scale: 0.50 },
 ]
 
 const selectedFacultyId = ref<string>(FACULTIES[0].id)
@@ -76,26 +77,28 @@ function hash01(seed: string): number {
 }
 
 // ---------- Q1: Teachers' Discipline ----------
-type LessonType = "Ma'ruza" | 'Amaliy' | 'Laboratoriya' | 'Seminar'
+type LessonKey = 'lecture' | 'practical' | 'laboratory' | 'seminar'
 
 interface LateTeacher {
   name: string
   group: string
   subject: string
-  lessonType: LessonType
+  lessonKey: LessonKey
   lateBy: number
 }
 
+// Subject names stay in Uzbek-Latin (proper academic course names);
+// teacher names + group codes are universal across languages.
 const ALL_LATE_TEACHERS: LateTeacher[] = [
-  { name: 'Karimov A.',   group: 'MAT 24/1', subject: 'Bolalar pedagogikasi',          lessonType: "Ma'ruza",      lateBy: 12 },
-  { name: 'Rahimov B.',   group: 'TSV 23/2', subject: 'Tasviriy faoliyat metodikasi',  lessonType: 'Amaliy',       lateBy: 8  },
-  { name: 'Yusupova D.',  group: 'FIL 24/3', subject: 'Falsafa',                       lessonType: "Ma'ruza",      lateBy: 15 },
-  { name: 'Nafasov A.',   group: 'PSI 23/1', subject: 'Pedagogik psixologiya',         lessonType: 'Seminar',      lateBy: 5  },
-  { name: 'Jurayev H.',   group: 'INF 24/2', subject: 'Axborot madaniyati',            lessonType: 'Amaliy',       lateBy: 22 },
-  { name: 'Imamova U.',   group: 'MED 23/1', subject: 'Mediasavodxonlik',              lessonType: "Ma'ruza",      lateBy: 4  },
-  { name: 'Kadirova X.',  group: 'MTM 24/4', subject: "Maktabgacha ta'lim metodikasi", lessonType: 'Amaliy',       lateBy: 9  },
-  { name: 'Sunnatov T.',  group: 'BOT 23/1', subject: 'Tabiat bilan tanishtirish',     lessonType: 'Laboratoriya', lateBy: 18 },
-  { name: 'Madalimov T.', group: 'JIS 24/2', subject: 'Jismoniy tarbiya nazariyasi',   lessonType: 'Amaliy',       lateBy: 7  },
+  { name: 'Karimov A.',   group: 'MAT 24/1', subject: 'Bolalar pedagogikasi',          lessonKey: 'lecture',    lateBy: 12 },
+  { name: 'Rahimov B.',   group: 'TSV 23/2', subject: 'Tasviriy faoliyat metodikasi',  lessonKey: 'practical',  lateBy: 8  },
+  { name: 'Yusupova D.',  group: 'FIL 24/3', subject: 'Falsafa',                       lessonKey: 'lecture',    lateBy: 15 },
+  { name: 'Nafasov A.',   group: 'PSI 23/1', subject: 'Pedagogik psixologiya',         lessonKey: 'seminar',    lateBy: 5  },
+  { name: 'Jurayev H.',   group: 'INF 24/2', subject: 'Axborot madaniyati',            lessonKey: 'practical',  lateBy: 22 },
+  { name: 'Imamova U.',   group: 'MED 23/1', subject: 'Mediasavodxonlik',              lessonKey: 'lecture',    lateBy: 4  },
+  { name: 'Kadirova X.',  group: 'MTM 24/4', subject: "Maktabgacha ta'lim metodikasi", lessonKey: 'practical',  lateBy: 9  },
+  { name: 'Sunnatov T.',  group: 'BOT 23/1', subject: 'Tabiat bilan tanishtirish',     lessonKey: 'laboratory', lateBy: 18 },
+  { name: 'Madalimov T.', group: 'JIS 24/2', subject: 'Jismoniy tarbiya nazariyasi',   lessonKey: 'practical',  lateBy: 7  },
 ]
 
 const TOTAL_TEACHERS_BASE = 142
@@ -142,9 +145,9 @@ const punctualityPct = computed(() =>
 )
 
 const selectedDateLabel = computed(() => {
-  if (isToday.value) return 'Bugun'
+  if (isToday.value) return t('common.today')
   const d = new Date(selectedDate.value + 'T00:00:00')
-  return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric' })
 })
 
 // ---------- Q2: Financial ----------
@@ -169,33 +172,38 @@ const debtPct = computed(() => 100 - paidPct.value)
 type Period = 'week' | 'month' | 'semester'
 const period = ref<Period>('week')
 
-const PERIOD_LABELS: Record<Period, string> = {
-  week: 'Haftalik',
-  month: 'Oylik',
-  semester: 'Semester',
-}
+const periodLabel = (p: Period) => t(`q3.period.${p}`)
 
-const PERIOD_DATA: Record<Period, { labels: string[]; values: number[] }> = {
+const PERIOD_DATA: Record<Period, { labelKeys: string[]; values: number[] }> = {
   week: {
-    labels: ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha'],
+    labelKeys: ['wd.mon', 'wd.tue', 'wd.wed', 'wd.thu', 'wd.fri', 'wd.sat'],
     values: [89, 91, 88, 93, 90, 92],
   },
   month: {
-    labels: ['1-hafta', '2-hafta', '3-hafta', '4-hafta'],
+    labelKeys: ['week.1', 'week.2', 'week.3', 'week.4'],
     values: [88, 90, 91, 92],
   },
   semester: {
-    labels: ['Sen', 'Okt', 'Noy', 'Dek', 'Yan'],
+    labelKeys: ['mo.sep', 'mo.oct', 'mo.nov', 'mo.dec', 'mo.jan'],
     values: [86, 89, 90, 87, 91],
   },
 }
 
+function resolveLabel(key: string): string {
+  // "week.1" → use the {n}-templated string
+  const m = /^week\.(\d+)$/.exec(key)
+  if (m) return t('week.n', { n: m[1] })
+  return t(key)
+}
+
 const attendanceSeries = computed(() => {
+  // lang dependency so labels re-translate
+  void lang.value
   const base = PERIOD_DATA[period.value]
   const facultyDrift = Math.round((hash01(`${selectedFacultyId.value}:att`) - 0.5) * 6)
   const seed = `${selectedFacultyId.value}:${period.value}:${tick.value}`
   return {
-    labels: base.labels,
+    labels: base.labelKeys.map(resolveLabel),
     values: base.values.map((v, i) => {
       const liveDrift = Math.round((hash01(`${seed}:${i}`) - 0.5) * 6)
       return Math.min(99, Math.max(60, v + facultyDrift + liveDrift))
@@ -211,29 +219,26 @@ const previousAttendance = computed(() => {
   return arr[arr.length - 2] ?? arr[arr.length - 1]
 })
 const attendanceDelta = computed(() => todayAttendance.value - previousAttendance.value)
-const previousPeriodLabel = computed(() => {
-  return period.value === 'week' ? 'kechagiga'
-       : period.value === 'month' ? "o'tgan haftaga"
-       : "o'tgan oyga"
-})
+const previousPeriodLabel = computed(() => t(`q3.vs.${period.value}`))
 
 // ---------- Q4: Academic Performance ----------
 const ACADEMIC_YEARS = ['2025–2026', '2024–2025', '2023–2024'] as const
 type AcademicYear = typeof ACADEMIC_YEARS[number]
-const SEMESTERS = ['1-semestr', '2-semestr'] as const
+const SEMESTERS = ['sem.1', 'sem.2'] as const
 type Semester = typeof SEMESTERS[number]
 
 const selectedYear = ref<AcademicYear>(ACADEMIC_YEARS[0])
 const selectedSemester = ref<Semester>(SEMESTERS[0])
 
 const GRADE_META = [
-  { label: "A'lo (5)",     weight: 5, color: '#10b981' },
-  { label: 'Yaxshi (4)',   weight: 4, color: '#3b82f6' },
-  { label: 'Qoniq. (3)',   weight: 3, color: '#f59e0b' },
-  { label: 'Yiqilgan (2)', weight: 2, color: '#ef4444' },
+  { key: 'grade.5', weight: 5, color: '#10b981' },
+  { key: 'grade.4', weight: 4, color: '#3b82f6' },
+  { key: 'grade.3', weight: 3, color: '#f59e0b' },
+  { key: 'grade.2', weight: 2, color: '#ef4444' },
 ]
 
 const grades = computed(() => {
+  void lang.value
   const seed = `${selectedFacultyId.value}:${selectedYear.value}:${selectedSemester.value}:${tick.value}`
   const r1 = hash01(`${seed}:a`)
   const r2 = hash01(`${seed}:b`)
@@ -243,7 +248,7 @@ const grades = computed(() => {
   const fShare = 0.05 + hash01(`${seed}:f`) * 0.08
   const cShare = Math.max(0.10, 1 - aShare - bShare - fShare)
   const counts = [aShare, bShare, cShare, fShare].map(s => Math.round(total * s))
-  return GRADE_META.map((g, i) => ({ ...g, count: counts[i] }))
+  return GRADE_META.map((g, i) => ({ ...g, label: t(g.key), count: counts[i] }))
 })
 
 const totalGraded = computed(() => grades.value.reduce((s, g) => s + g.count, 0))
@@ -267,10 +272,10 @@ onUnmounted(() => {
   if (liveTimer !== null) clearInterval(liveTimer)
 })
 const clockText = computed(() =>
-  now.value.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+  now.value.toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
 )
 const dateText = computed(() =>
-  now.value.toLocaleDateString('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+  now.value.toLocaleDateString(locale.value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
 )
 
 // ---------- Chart palette (reactive to theme) ----------
@@ -454,7 +459,7 @@ const performanceOption = computed(() => {
 })
 
 function fmt(n: number): string {
-  return n.toLocaleString('uz-UZ').replace(/,/g, ' ')
+  return n.toLocaleString(locale.value).replace(/,/g, ' ')
 }
 </script>
 
@@ -468,10 +473,10 @@ function fmt(n: number): string {
         </div>
         <div class="min-w-0">
           <h1 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700 dark:text-slate-200 sm:text-sm">
-            Vaziyat markazi · Smart Campus
+            {{ t('app.title') }}
           </h1>
           <p class="truncate text-[11px] text-slate-500 dark:text-slate-400 sm:text-xs">
-            Chirchiq davlat pedagogika universiteti
+            {{ t('app.university') }}
           </p>
         </div>
       </div>
@@ -480,7 +485,7 @@ function fmt(n: number): string {
         <!-- Faculty filter -->
         <label class="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800 sm:flex-initial">
           <BuildingIcon class="size-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-          <span class="hidden text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 sm:inline">Fakultet</span>
+          <span class="hidden text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 sm:inline">{{ t('common.faculty') }}</span>
           <select
             v-model="selectedFacultyId"
             class="min-w-0 flex-1 cursor-pointer bg-transparent font-medium text-slate-800 focus:outline-none dark:text-slate-200 sm:max-w-[260px]"
@@ -491,14 +496,33 @@ function fmt(n: number): string {
               :value="f.id"
               class="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100"
             >
-              {{ f.name }}
+              {{ t(`fac.${f.id}`) }}
             </option>
           </select>
         </label>
 
-        <div class="hidden items-center gap-2 text-xs text-slate-500 dark:text-slate-400 lg:flex" :title="`Yangilangan: #${tick}`">
+        <!-- Language selector -->
+        <select
+          v-model="lang"
+          class="cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          :title="t('common.faculty')"
+        >
+          <option
+            v-for="l in LANGS"
+            :key="l.code"
+            :value="l.code"
+            class="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+          >
+            {{ l.short }}
+          </option>
+        </select>
+
+        <div
+          class="hidden items-center gap-2 text-xs text-slate-500 dark:text-slate-400 lg:flex"
+          :title="`${t('common.refreshed')}: #${tick}`"
+        >
           <span class="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-          Jonli · 10s
+          {{ t('common.live') }}
         </div>
         <div class="text-right">
           <div class="font-mono text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 sm:text-lg">{{ clockText }}</div>
@@ -518,7 +542,7 @@ function fmt(n: number): string {
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-600 dark:text-sky-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              O'qituvchilar intizomi
+              {{ t('q1.title') }}
             </h2>
           </div>
           <div class="flex items-center gap-2">
@@ -540,54 +564,54 @@ function fmt(n: number): string {
           <div class="flex flex-col gap-4 sm:col-span-3 lg:overflow-hidden">
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/50">
-                <div class="text-[11px] uppercase tracking-wider text-slate-500">Jami</div>
+                <div class="text-[11px] uppercase tracking-wider text-slate-500">{{ t('q1.total') }}</div>
                 <div class="mt-1 text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{{ totalTeachers }}</div>
               </div>
               <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 dark:border-rose-500/30 dark:bg-rose-500/10">
-                <div class="text-[11px] uppercase tracking-wider text-rose-700 dark:text-rose-300">Kech kelgan</div>
+                <div class="text-[11px] uppercase tracking-wider text-rose-700 dark:text-rose-300">{{ t('q1.late') }}</div>
                 <div class="mt-1 text-3xl font-bold tabular-nums text-rose-600 dark:text-rose-400">{{ lateCount }}</div>
               </div>
             </div>
 
             <div class="min-h-[220px] flex-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50 lg:min-h-0">
               <div class="border-b border-slate-200 px-4 py-2 text-[11px] uppercase tracking-wider text-slate-500 dark:border-slate-600">
-                Kech kelganlar
+                {{ t('q1.late_list') }}
               </div>
               <ul class="max-h-[260px] overflow-y-auto pb-8 lg:max-h-none lg:h-full">
                 <li
-                  v-for="t in lateTeachers"
-                  :key="t.name"
+                  v-for="item in lateTeachers"
+                  :key="item.name"
                   class="flex items-center gap-3 border-b border-slate-200/80 px-4 py-2.5 last:border-b-0 dark:border-slate-600/60"
                 >
                   <span class="size-2 shrink-0 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]" />
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
-                      <span class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t.name }}</span>
+                      <span class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ item.name }}</span>
                       <span class="shrink-0 rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300">
-                        {{ t.group }}
+                        {{ item.group }}
                       </span>
                     </div>
                     <div class="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
-                      <span class="truncate">{{ t.subject }}</span>
+                      <span class="truncate">{{ item.subject }}</span>
                       <span class="text-slate-300 dark:text-slate-700">·</span>
                       <span
                         :class="[
                           'shrink-0 rounded px-1 py-px text-[10px] font-medium uppercase tracking-wider',
-                          t.lessonType === 'Ma\'ruza'
+                          item.lessonKey === 'lecture'
                             ? 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300'
-                            : t.lessonType === 'Amaliy'
+                            : item.lessonKey === 'practical'
                               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                              : t.lessonType === 'Laboratoriya'
+                              : item.lessonKey === 'laboratory'
                                 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
                                 : 'bg-slate-200 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300',
                         ]"
                       >
-                        {{ t.lessonType }}
+                        {{ t(`lesson.${item.lessonKey}`) }}
                       </span>
                     </div>
                   </div>
                   <span class="shrink-0 rounded-md bg-rose-100 px-2 py-0.5 font-mono text-xs font-semibold tabular-nums text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">
-                    +{{ t.lateBy }}m
+                    +{{ item.lateBy }}m
                   </span>
                 </li>
               </ul>
@@ -597,8 +621,8 @@ function fmt(n: number): string {
           <div class="flex min-h-[180px] flex-col items-center justify-center sm:col-span-2">
             <VChart :option="punctualityOption" autoresize class="h-full min-h-[160px] w-full" />
             <div class="-mt-6 text-center">
-              <div class="text-[11px] uppercase tracking-wider text-slate-500">Intizom darajasi</div>
-              <div class="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">{{ totalTeachers - lateCount }} / {{ totalTeachers }} o'z vaqtida</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">{{ t('q1.discipline_rate') }}</div>
+              <div class="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">{{ totalTeachers - lateCount }} / {{ totalTeachers }} {{ t('q1.on_time_suffix') }}</div>
             </div>
           </div>
         </div>
@@ -609,21 +633,21 @@ function fmt(n: number): string {
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <WalletIcon class="size-4 text-amber-600 dark:text-amber-400" />
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">To'lov holati</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q2.title') }}</h2>
           </div>
-          <span class="text-[11px] text-slate-500">Joriy semestr</span>
+          <span class="text-[11px] text-slate-500">{{ t('common.current_semester') }}</span>
         </div>
 
         <div class="mt-4 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-5">
           <div class="flex flex-col justify-center gap-3 sm:col-span-3">
             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/50">
-              <div class="text-[11px] uppercase tracking-wider text-slate-500">Jami talabalar</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">{{ t('q2.total') }}</div>
               <div class="mt-1 text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{{ fmt(totalStudents) }}</div>
             </div>
 
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-500/25 dark:bg-emerald-500/10">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300">To'lagan</span>
+                <span class="text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300">{{ t('q2.paid') }}</span>
                 <span class="text-[11px] text-emerald-600/90 dark:text-emerald-400/80">{{ paidPct }}%</span>
               </div>
               <div class="mt-1 text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{{ fmt(studentsPaid) }}</div>
@@ -633,7 +657,7 @@ function fmt(n: number): string {
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
                   <AlertTriangleIcon class="size-3.5 text-orange-600 dark:text-orange-400" />
-                  <span class="text-[11px] uppercase tracking-wider text-orange-700 dark:text-orange-300">Qarzdor</span>
+                  <span class="text-[11px] uppercase tracking-wider text-orange-700 dark:text-orange-300">{{ t('q2.debt') }}</span>
                 </div>
                 <span class="text-[11px] text-orange-600/90 dark:text-orange-400/80">{{ debtPct }}%</span>
               </div>
@@ -644,7 +668,7 @@ function fmt(n: number): string {
           <div class="relative flex min-h-[180px] items-center justify-center sm:col-span-2">
             <VChart :option="financialOption" autoresize class="h-full min-h-[160px] w-full" />
             <div class="pointer-events-none absolute inset-0 flex -translate-y-2 flex-col items-center justify-center">
-              <div class="text-[10px] uppercase tracking-wider text-slate-500">Qarzdorlik</div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-500">{{ t('q2.debt_short') }}</div>
               <div class="text-2xl font-bold tabular-nums text-orange-600 dark:text-orange-400">{{ debtPct }}%</div>
             </div>
           </div>
@@ -656,7 +680,7 @@ function fmt(n: number): string {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-600 dark:text-sky-400" />
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Talabalar davomati</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q3.title') }}</h2>
           </div>
           <div class="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-800/60">
             <button
@@ -670,18 +694,18 @@ function fmt(n: number): string {
               ]"
               @click="period = p"
             >
-              {{ PERIOD_LABELS[p] }}
+              {{ periodLabel(p) }}
             </button>
           </div>
         </div>
 
         <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/50">
-            <div class="text-[10px] uppercase tracking-wider text-slate-500">Faol talabalar</div>
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">{{ t('q3.active') }}</div>
             <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{{ fmt(totalStudents) }}</div>
           </div>
           <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-500/30 dark:bg-sky-500/10">
-            <div class="text-[10px] uppercase tracking-wider text-sky-700 dark:text-sky-300">Bugun</div>
+            <div class="text-[10px] uppercase tracking-wider text-sky-700 dark:text-sky-300">{{ t('q3.today') }}</div>
             <div class="mt-1 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-300">{{ todayAttendance }}%</div>
           </div>
           <div
@@ -692,7 +716,7 @@ function fmt(n: number): string {
                 : 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10',
             ]"
           >
-            <div class="text-[10px] uppercase tracking-wider text-slate-500">{{ previousPeriodLabel }} nisbatan</div>
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">{{ previousPeriodLabel }}</div>
             <div
               :class="[
                 'mt-1 flex items-center gap-1 text-2xl font-bold tabular-nums',
@@ -718,7 +742,7 @@ function fmt(n: number): string {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <GraduationCapIcon class="size-4 text-violet-600 dark:text-violet-400" />
-            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">O'zlashtirish ko'rsatkichi</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q4.title') }}</h2>
           </div>
           <div class="flex items-center gap-2">
             <select
@@ -744,7 +768,7 @@ function fmt(n: number): string {
                 :value="s"
                 class="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100"
               >
-                {{ s }}
+                {{ t(s) }}
               </option>
             </select>
           </div>
@@ -752,18 +776,18 @@ function fmt(n: number): string {
 
         <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div class="col-span-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 dark:border-violet-500/30 dark:bg-violet-500/10">
-            <div class="text-[10px] uppercase tracking-wider text-violet-700 dark:text-violet-300">O'rtacha GPA</div>
+            <div class="text-[10px] uppercase tracking-wider text-violet-700 dark:text-violet-300">{{ t('q4.gpa') }}</div>
             <div class="mt-1 flex items-baseline gap-2">
               <span class="text-3xl font-bold tabular-nums text-violet-700 dark:text-violet-300">{{ gpa }}</span>
               <span class="text-xs text-slate-500">/ 5.00</span>
             </div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-600 dark:bg-slate-800/50">
-            <div class="text-[10px] uppercase tracking-wider text-slate-500">Baholanganlar</div>
+            <div class="text-[10px] uppercase tracking-wider text-slate-500">{{ t('q4.graded') }}</div>
             <div class="mt-1 text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{{ fmt(totalGraded) }}</div>
           </div>
           <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 dark:border-rose-500/30 dark:bg-rose-500/10">
-            <div class="text-[10px] uppercase tracking-wider text-rose-700 dark:text-rose-300">Yiqilgan</div>
+            <div class="text-[10px] uppercase tracking-wider text-rose-700 dark:text-rose-300">{{ t('q4.failed') }}</div>
             <div class="mt-1 text-xl font-bold tabular-nums text-rose-600 dark:text-rose-400">{{ fmt(grades[3].count) }}</div>
           </div>
         </div>
