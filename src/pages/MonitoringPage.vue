@@ -405,29 +405,29 @@ function fmt(n: number): string {
 </script>
 
 <template>
-  <div class="dark h-screen w-screen overflow-hidden bg-slate-950 text-slate-100">
+  <div class="dark min-h-screen w-full bg-slate-950 text-slate-100 lg:h-screen lg:overflow-hidden">
     <!-- Header bar -->
-    <header class="flex h-14 items-center justify-between border-b border-slate-800 bg-slate-900/60 px-6">
+    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/60 px-4 py-3 sm:px-6 lg:h-14 lg:flex-nowrap lg:py-0">
       <div class="flex items-center gap-3 min-w-0">
-        <div class="flex size-9 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400">
+        <div class="flex size-9 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400 shrink-0">
           <TrendingUpIcon class="size-5" />
         </div>
         <div class="min-w-0">
-          <h1 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">
+          <h1 class="text-[11px] sm:text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">
             Vaziyat markazi · Smart Campus
           </h1>
-          <p class="text-xs text-slate-400 truncate">Chirchiq davlat pedagogika universiteti</p>
+          <p class="text-[11px] sm:text-xs text-slate-400 truncate">Chirchiq davlat pedagogika universiteti</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-4 lg:w-auto">
         <!-- Faculty filter -->
-        <label class="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs">
-          <BuildingIcon class="size-3.5 text-slate-400" />
-          <span class="text-slate-400 uppercase tracking-wider text-[10px]">Fakultet</span>
+        <label class="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs sm:flex-initial">
+          <BuildingIcon class="size-3.5 text-slate-400 shrink-0" />
+          <span class="hidden sm:inline text-slate-400 uppercase tracking-wider text-[10px]">Fakultet</span>
           <select
             v-model="selectedFacultyId"
-            class="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer max-w-[260px]"
+            class="min-w-0 flex-1 bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer sm:max-w-[260px]"
           >
             <option v-for="f in FACULTIES" :key="f.id" :value="f.id" class="bg-slate-900">
               {{ f.name }}
@@ -440,18 +440,18 @@ function fmt(n: number): string {
           Jonli
         </div>
         <div class="text-right">
-          <div class="font-mono text-lg font-semibold tabular-nums text-slate-100">{{ clockText }}</div>
-          <div class="text-[11px] capitalize text-slate-400">{{ dateText }}</div>
+          <div class="font-mono text-sm sm:text-lg font-semibold tabular-nums text-slate-100">{{ clockText }}</div>
+          <div class="hidden sm:block text-[11px] capitalize text-slate-400">{{ dateText }}</div>
         </div>
       </div>
     </header>
 
-    <!-- 2x2 grid -->
-    <div class="grid h-[calc(100vh-3.5rem)] grid-cols-2 grid-rows-2 gap-3 p-3">
+    <!-- Responsive grid: stacks on mobile, 2×2 fixed-height on lg+ -->
+    <div class="grid grid-cols-1 gap-3 p-3 lg:h-[calc(100vh-3.5rem)] lg:grid-cols-2 lg:grid-rows-2">
 
       <!-- Q1: Teachers' Discipline -->
-      <section class="flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-        <div class="flex items-center justify-between gap-3">
+      <section class="flex min-h-[520px] flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 lg:min-h-0 lg:overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">
@@ -469,12 +469,12 @@ function fmt(n: number): string {
                 class="bg-transparent text-slate-200 focus:outline-none [color-scheme:dark] font-medium tabular-nums"
               />
             </label>
-            <span class="text-[11px] text-slate-500">{{ selectedDateLabel }}</span>
+            <span class="hidden sm:inline text-[11px] text-slate-500">{{ selectedDateLabel }}</span>
           </div>
         </div>
 
-        <div class="mt-4 grid flex-1 grid-cols-5 gap-4 overflow-hidden">
-          <div class="col-span-3 flex flex-col gap-4 overflow-hidden">
+        <div class="mt-4 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-5 lg:overflow-hidden">
+          <div class="flex flex-col gap-4 sm:col-span-3 lg:overflow-hidden">
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3">
                 <div class="text-[11px] uppercase tracking-wider text-slate-500">Jami</div>
@@ -486,11 +486,11 @@ function fmt(n: number): string {
               </div>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-950/40">
+            <div class="min-h-[220px] flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-950/40 lg:min-h-0">
               <div class="border-b border-slate-800 px-4 py-2 text-[11px] uppercase tracking-wider text-slate-500">
                 Kech kelganlar
               </div>
-              <ul class="h-full overflow-y-auto pb-8">
+              <ul class="max-h-[260px] overflow-y-auto pb-8 lg:max-h-none lg:h-full">
                 <li
                   v-for="t in lateTeachers"
                   :key="t.name"
@@ -531,8 +531,8 @@ function fmt(n: number): string {
             </div>
           </div>
 
-          <div class="col-span-2 flex flex-col items-center justify-center">
-            <VChart :option="punctualityOption" autoresize class="h-full w-full" />
+          <div class="flex min-h-[180px] flex-col items-center justify-center sm:col-span-2">
+            <VChart :option="punctualityOption" autoresize class="h-full min-h-[160px] w-full" />
             <div class="-mt-6 text-center">
               <div class="text-[11px] uppercase tracking-wider text-slate-500">Intizom darajasi</div>
               <div class="mt-0.5 text-xs text-emerald-400">{{ totalTeachers - lateCount }} / {{ totalTeachers }} o'z vaqtida</div>
@@ -542,7 +542,7 @@ function fmt(n: number): string {
       </section>
 
       <!-- Q2: Financial -->
-      <section class="flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 lg:min-h-0 lg:overflow-hidden">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <WalletIcon class="size-4 text-amber-400" />
@@ -551,8 +551,8 @@ function fmt(n: number): string {
           <span class="text-[11px] text-slate-500">Joriy semestr</span>
         </div>
 
-        <div class="mt-4 grid flex-1 grid-cols-5 gap-4">
-          <div class="col-span-3 flex flex-col justify-center gap-3">
+        <div class="mt-4 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-5">
+          <div class="flex flex-col justify-center gap-3 sm:col-span-3">
             <div class="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3">
               <div class="text-[11px] uppercase tracking-wider text-slate-500">Jami talabalar</div>
               <div class="mt-1 text-4xl font-bold tabular-nums text-slate-100">{{ fmt(totalStudents) }}</div>
@@ -578,8 +578,8 @@ function fmt(n: number): string {
             </div>
           </div>
 
-          <div class="col-span-2 relative flex items-center justify-center">
-            <VChart :option="financialOption" autoresize class="h-full w-full" />
+          <div class="relative flex min-h-[180px] items-center justify-center sm:col-span-2">
+            <VChart :option="financialOption" autoresize class="h-full min-h-[160px] w-full" />
             <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -translate-y-2">
               <div class="text-[10px] uppercase tracking-wider text-slate-500">Qarzdorlik</div>
               <div class="text-2xl font-bold tabular-nums text-orange-400">{{ debtPct }}%</div>
@@ -589,8 +589,8 @@ function fmt(n: number): string {
       </section>
 
       <!-- Q3: Attendance -->
-      <section class="flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-        <div class="flex items-center justify-between gap-3">
+      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 lg:min-h-0 lg:overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UsersIcon class="size-4 text-sky-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Talabalar davomati</h2>
@@ -612,7 +612,7 @@ function fmt(n: number): string {
           </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-3 gap-3">
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div class="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3">
             <div class="text-[10px] uppercase tracking-wider text-slate-500">Faol talabalar</div>
             <div class="mt-1 text-2xl font-bold tabular-nums text-slate-100">{{ fmt(totalStudents) }}</div>
@@ -641,14 +641,14 @@ function fmt(n: number): string {
           </div>
         </div>
 
-        <div class="mt-4 min-h-0 flex-1">
-          <VChart :option="attendanceOption" autoresize class="h-full w-full" />
+        <div class="mt-4 min-h-[220px] flex-1">
+          <VChart :option="attendanceOption" autoresize class="h-full min-h-[200px] w-full" />
         </div>
       </section>
 
       <!-- Q4: Academic Performance -->
-      <section class="flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-        <div class="flex items-center justify-between gap-3">
+      <section class="flex min-h-[480px] flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5 lg:min-h-0 lg:overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <GraduationCapIcon class="size-4 text-violet-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">O'zlashtirish ko'rsatkichi</h2>
@@ -673,7 +673,7 @@ function fmt(n: number): string {
           </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-4 gap-3">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div class="col-span-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-3">
             <div class="text-[10px] uppercase tracking-wider text-violet-300">O'rtacha GPA</div>
             <div class="mt-1 flex items-baseline gap-2">
@@ -691,8 +691,8 @@ function fmt(n: number): string {
           </div>
         </div>
 
-        <div class="mt-4 min-h-0 flex-1">
-          <VChart :option="performanceOption" autoresize class="h-full w-full" />
+        <div class="mt-4 min-h-[220px] flex-1">
+          <VChart :option="performanceOption" autoresize class="h-full min-h-[200px] w-full" />
         </div>
       </section>
     </div>
