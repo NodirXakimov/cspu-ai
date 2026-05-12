@@ -320,8 +320,8 @@ const punctualityOption = computed(() => {
         endAngle: -20,
         min: 0,
         max: 100,
-        radius: '110%',
-        center: ['50%', '70%'],
+        radius: '95%',
+        center: ['50%', '68%'],
         progress: { show: true, width: 22, roundCap: true, itemStyle: { color: '#10b981' } },
         axisLine: { lineStyle: { width: 22, color: [[1, c.gaugeTrack]] } },
         pointer: { show: false },
@@ -548,7 +548,7 @@ function fmt(n: number): string {
               {{ t('q1.title') }}
             </h2>
           </div>
-          <div class="flex items-center gap-2" @click.stop>
+          <div class="flex items-center gap-2" @click.stop.prevent @mousedown.stop>
             <label class="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800/60">
               <CalendarIcon class="size-3.5 text-slate-500 dark:text-slate-400" />
               <input
@@ -621,8 +621,8 @@ function fmt(n: number): string {
             </div>
           </div>
 
-          <div class="flex min-h-[180px] flex-col items-center justify-center sm:col-span-2">
-            <VChart :option="punctualityOption" autoresize class="h-full min-h-[160px] w-full" />
+          <div class="flex min-h-[180px] flex-col items-center justify-center overflow-hidden sm:col-span-2">
+            <VChart :option="punctualityOption" autoresize class="h-full max-h-[260px] min-h-[160px] w-full" />
             <div class="-mt-6 text-center">
               <div class="text-[11px] uppercase tracking-wider text-slate-500">{{ t('q1.discipline_rate') }}</div>
               <div class="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">{{ totalTeachers - lateCount }} / {{ totalTeachers }} {{ t('q1.on_time_suffix') }}</div>
@@ -689,7 +689,7 @@ function fmt(n: number): string {
             <UsersIcon class="size-4 text-sky-600 dark:text-sky-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q3.title') }}</h2>
           </div>
-          <div class="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-800/60" @click.stop>
+          <div class="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-800/60" @click.stop.prevent @mousedown.stop>
             <button
               v-for="p in (['week', 'month', 'semester'] as const)"
               :key="p"
@@ -753,7 +753,7 @@ function fmt(n: number): string {
             <GraduationCapIcon class="size-4 text-violet-600 dark:text-violet-400" />
             <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ t('q4.title') }}</h2>
           </div>
-          <div class="flex items-center gap-2" @click.stop>
+          <div class="flex items-center gap-2" @click.stop.prevent @mousedown.stop>
             <select
               v-model="selectedYear"
               class="cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-800 focus:outline-none dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200"

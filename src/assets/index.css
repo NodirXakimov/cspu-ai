@@ -127,4 +127,34 @@
     @apply bg-background text-foreground;
     @apply font-sans;
     }
+
+  /* Thin, subtle scrollbars across the app */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.28) transparent;
+  }
+  .dark * {
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 116, 139, 0.28);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 116, 139, 0.45);
+  }
+  .dark *::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.22);
+  }
+  .dark *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.4);
+  }
 }
