@@ -18,16 +18,13 @@ import {
   TrendingDownIcon,
 } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import LangSwitcher from '@/components/LangSwitcher.vue'
 import { useTheme } from '@/composables/useTheme'
+import { useI18n } from '@/composables/useI18n'
 
 use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent])
 
 type FacultyId = 'ped' | 'it' | 'fil' | 'mat' | 'tar'
-
-interface Faculty {
-  id: FacultyId
-  name: string
-}
 
 interface Debtor {
   id: number
@@ -35,18 +32,10 @@ interface Debtor {
   group: string
   facultyId: FacultyId
   course: 1 | 2 | 3 | 4
-  debt: number // in UZS
+  debt: number
 }
 
-const FACULTIES: Faculty[] = [
-  { id: 'ped', name: 'Pedagogika' },
-  { id: 'it',  name: 'Axborot texnologiyalari' },
-  { id: 'fil', name: 'Filologiya' },
-  { id: 'mat', name: 'Matematika' },
-  { id: 'tar', name: 'Tarix' },
-]
-
-const facultyName = (id: FacultyId) => FACULTIES.find(f => f.id === id)?.name ?? id
+const FACULTY_IDS: FacultyId[] = ['ped', 'it', 'fil', 'mat', 'tar']
 
 const DEBTORS = ref<Debtor[]>([
   { id: 1,  name: 'Azizov Jasur',         group: 'PED-21-A', facultyId: 'ped', course: 1, debt: 8_400_000 },
@@ -69,6 +58,9 @@ const DEBTORS = ref<Debtor[]>([
 
 const selectedFaculty = ref<'all' | FacultyId>('all')
 const { isDark } = useTheme()
+const { t, locale } = useI18n()
+
+const facultyName = (id: FacultyId) => t(`fac.${id}`)
 
 const filtered = computed(() =>
   selectedFaculty.value === 'all'
@@ -99,7 +91,7 @@ const debtByCourse = computed(() => {
 })
 
 const currency = (v: number) =>
-  new Intl.NumberFormat('uz-UZ').format(v) + " so'm"
+  new Intl.NumberFormat(locale.value).format(v) + ' ' + t('fd.currency')
 
 const chartOption = computed(() => {
   const dark = isDark.value
@@ -114,7 +106,7 @@ const chartOption = computed(() => {
     },
     xAxis: {
       type: 'category',
-      data: ['1-kurs', '2-kurs', '3-kurs', '4-kurs'],
+      data: [1, 2, 3, 4].map(n => t('fd.year', { n })),
       axisLine: { lineStyle: { color: gridColor } },
       axisLabel: { color: axisColor, fontWeight: 600 },
     },
@@ -129,7 +121,7 @@ const chartOption = computed(() => {
     },
     series: [
       {
-        name: 'Qarzdorlik',
+        name: t('fd.chart.series'),
         type: 'bar',
         data: debtByCourse.value,
         barWidth: '46%',
@@ -142,18 +134,6 @@ const chartOption = computed(() => {
               { offset: 0, color: '#f87171' },
               { offset: 1, color: '#dc2626' },
             ],
-          },
-        },
-        emphasis: {
-          itemStyle: {
-            color: {
-              type: 'linear',
-              x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [
-                { offset: 0, color: '#fb923c' },
-                { offset: 1, color: '#ef4444' },
-              ],
-            },
           },
         },
       },
@@ -170,13 +150,14 @@ const chartOption = computed(() => {
         class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
       >
         <ArrowLeftIcon class="size-4" />
-        Orqaga
+        {{ t('dd.back') }}
       </RouterLink>
 
       <div class="flex items-center gap-3">
         <h1 class="hidden text-base font-semibold text-slate-800 dark:text-slate-100 sm:block">
-          To'lov holati
+          {{ t('fd.header') }}
         </h1>
+        <LangSwitcher />
         <ThemeToggle />
       </div>
     </header>
@@ -185,31 +166,30 @@ const chartOption = computed(() => {
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Moliyaviy hisobot
+            {{ t('fd.title') }}
           </h2>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Talabalar qarzdorligi va kurslar bo'yicha taqsimot
+            {{ t('fd.subtitle') }}
           </p>
         </div>
 
         <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <span class="font-medium">Fakultet:</span>
+          <span class="font-medium">{{ t('dd.faculty_label') }}</span>
           <select
             v-model="selectedFaculty"
             class="min-w-[200px] cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:border-slate-300 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-500 dark:focus:ring-sky-900/40"
           >
-            <option value="all">Barcha fakultetlar</option>
-            <option v-for="f in FACULTIES" :key="f.id" :value="f.id">{{ f.name }}</option>
+            <option value="all">{{ t('dd.all_faculties') }}</option>
+            <option v-for="id in FACULTY_IDS" :key="id" :value="id">{{ facultyName(id) }}</option>
           </select>
         </label>
       </div>
 
-      <!-- Stat cards -->
       <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Qarzdorlar
+              {{ t('fd.stat.debtors') }}
             </span>
             <UsersIcon class="size-4 text-slate-400" />
           </div>
@@ -219,7 +199,7 @@ const chartOption = computed(() => {
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Umumiy qarz
+              {{ t('fd.stat.total') }}
             </span>
             <WalletIcon class="size-4 text-rose-500" />
           </div>
@@ -229,7 +209,7 @@ const chartOption = computed(() => {
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              O'rtacha qarz
+              {{ t('fd.stat.avg') }}
             </span>
             <TrendingDownIcon class="size-4 text-amber-500" />
           </div>
@@ -239,7 +219,7 @@ const chartOption = computed(() => {
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
             <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Eng katta qarz
+              {{ t('fd.stat.max') }}
             </span>
             <AlertTriangleIcon class="size-4 text-rose-500" />
           </div>
@@ -247,29 +227,27 @@ const chartOption = computed(() => {
         </div>
       </div>
 
-      <!-- Chart -->
       <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
         <header class="flex items-center justify-between">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Qarzdorlik taqsimoti (kurslar bo'yicha)
+              {{ t('fd.chart.title') }}
             </h3>
             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {{ selectedFaculty === 'all' ? 'Barcha fakultetlar' : facultyName(selectedFaculty) }}
+              {{ selectedFaculty === 'all' ? t('dd.all_label') : facultyName(selectedFaculty) }}
             </p>
           </div>
         </header>
         <VChart :option="chartOption" autoresize class="mt-4 h-[320px] w-full" />
       </section>
 
-      <!-- Top debtors table -->
       <section class="mt-6 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <header class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
           <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
-            Eng katta qarzdorlar
+            {{ t('fd.table.title') }}
           </h3>
           <span class="text-xs text-slate-500 dark:text-slate-400">
-            {{ topDebtors.length }} ta talaba
+            {{ t('dd.students_count', { n: topDebtors.length }) }}
           </span>
         </header>
 
@@ -278,11 +256,11 @@ const chartOption = computed(() => {
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
               <tr>
                 <th class="px-5 py-3">#</th>
-                <th class="px-5 py-3">Talaba</th>
-                <th class="px-5 py-3">Guruh</th>
-                <th class="px-5 py-3">Fakultet</th>
-                <th class="px-5 py-3 text-right">Qarz miqdori</th>
-                <th class="px-5 py-3 text-center">Holat</th>
+                <th class="px-5 py-3">{{ t('dd.col.student') }}</th>
+                <th class="px-5 py-3">{{ t('dd.col.group') }}</th>
+                <th class="px-5 py-3">{{ t('dd.col.faculty') }}</th>
+                <th class="px-5 py-3 text-right">{{ t('fd.col.debt') }}</th>
+                <th class="px-5 py-3 text-center">{{ t('dd.col.status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -301,13 +279,13 @@ const chartOption = computed(() => {
                 <td class="px-5 py-3 text-center">
                   <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30">
                     <span class="size-1.5 rounded-full bg-rose-500"></span>
-                    To'lanmagan
+                    {{ t('fd.badge.unpaid') }}
                   </span>
                 </td>
               </tr>
               <tr v-if="!topDebtors.length">
                 <td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Ushbu fakultet bo'yicha qarzdorlar topilmadi
+                  {{ t('fd.empty') }}
                 </td>
               </tr>
             </tbody>

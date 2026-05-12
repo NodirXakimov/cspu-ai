@@ -10,13 +10,10 @@ import {
   CalendarXIcon,
 } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import LangSwitcher from '@/components/LangSwitcher.vue'
+import { useI18n } from '@/composables/useI18n'
 
 type FacultyId = 'ped' | 'it' | 'fil' | 'mat' | 'tar'
-
-interface Faculty {
-  id: FacultyId
-  name: string
-}
 
 interface Group {
   id: string
@@ -31,32 +28,24 @@ interface Absentee {
   name: string
   group: string
   facultyId: FacultyId
-  missed: number // missed classes this week
+  missed: number
 }
 
-const FACULTIES: Faculty[] = [
-  { id: 'ped', name: 'Pedagogika' },
-  { id: 'it',  name: 'Axborot texnologiyalari' },
-  { id: 'fil', name: 'Filologiya' },
-  { id: 'mat', name: 'Matematika' },
-  { id: 'tar', name: 'Tarix' },
-]
-
-const facultyName = (id: FacultyId) => FACULTIES.find(f => f.id === id)?.name ?? id
+const FACULTY_IDS: FacultyId[] = ['ped', 'it', 'fil', 'mat', 'tar']
 
 const GROUPS = ref<Group[]>([
-  { id: 'g1',  name: 'MAT 24/3',  facultyId: 'mat', total: 26, presentToday: 17 }, // 65%
-  { id: 'g2',  name: 'IT 23/2',   facultyId: 'it',  total: 28, presentToday: 19 }, // 68%
-  { id: 'g3',  name: 'PED 22/1',  facultyId: 'ped', total: 25, presentToday: 18 }, // 72%
-  { id: 'g4',  name: 'FIL 24/2',  facultyId: 'fil', total: 24, presentToday: 18 }, // 75%
-  { id: 'g5',  name: 'TAR 23/1',  facultyId: 'tar', total: 22, presentToday: 17 }, // 77%
-  { id: 'g6',  name: 'IT 22/1',   facultyId: 'it',  total: 27, presentToday: 22 }, // 81%
-  { id: 'g7',  name: 'MAT 23/2',  facultyId: 'mat', total: 25, presentToday: 21 }, // 84%
-  { id: 'g8',  name: 'PED 24/2',  facultyId: 'ped', total: 26, presentToday: 23 }, // 88%
-  { id: 'g9',  name: 'FIL 23/1',  facultyId: 'fil', total: 23, presentToday: 21 }, // 91%
-  { id: 'g10', name: 'TAR 24/1',  facultyId: 'tar', total: 24, presentToday: 22 }, // 92%
-  { id: 'g11', name: 'IT 24/1',   facultyId: 'it',  total: 28, presentToday: 26 }, // 93%
-  { id: 'g12', name: 'MAT 22/1',  facultyId: 'mat', total: 22, presentToday: 21 }, // 95%
+  { id: 'g1',  name: 'MAT 24/3',  facultyId: 'mat', total: 26, presentToday: 17 },
+  { id: 'g2',  name: 'IT 23/2',   facultyId: 'it',  total: 28, presentToday: 19 },
+  { id: 'g3',  name: 'PED 22/1',  facultyId: 'ped', total: 25, presentToday: 18 },
+  { id: 'g4',  name: 'FIL 24/2',  facultyId: 'fil', total: 24, presentToday: 18 },
+  { id: 'g5',  name: 'TAR 23/1',  facultyId: 'tar', total: 22, presentToday: 17 },
+  { id: 'g6',  name: 'IT 22/1',   facultyId: 'it',  total: 27, presentToday: 22 },
+  { id: 'g7',  name: 'MAT 23/2',  facultyId: 'mat', total: 25, presentToday: 21 },
+  { id: 'g8',  name: 'PED 24/2',  facultyId: 'ped', total: 26, presentToday: 23 },
+  { id: 'g9',  name: 'FIL 23/1',  facultyId: 'fil', total: 23, presentToday: 21 },
+  { id: 'g10', name: 'TAR 24/1',  facultyId: 'tar', total: 24, presentToday: 22 },
+  { id: 'g11', name: 'IT 24/1',   facultyId: 'it',  total: 28, presentToday: 26 },
+  { id: 'g12', name: 'MAT 22/1',  facultyId: 'mat', total: 22, presentToday: 21 },
 ])
 
 const ABSENTEES = ref<Absentee[]>([
@@ -81,6 +70,9 @@ const ABSENTEES = ref<Absentee[]>([
 ])
 
 const selectedFaculty = ref<'all' | FacultyId>('all')
+const { t } = useI18n()
+
+const facultyName = (id: FacultyId) => t(`fac.${id}`)
 
 const filteredGroups = computed(() =>
   selectedFaculty.value === 'all'
@@ -126,7 +118,7 @@ function severityClasses(pct: number) {
       text: 'text-rose-700 dark:text-rose-300',
       ring: 'ring-rose-200 dark:ring-rose-500/30',
       badge: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
-      label: 'Kritik',
+      labelKey: 'ad.sev.critical',
     }
   }
   if (pct < 80) {
@@ -135,7 +127,7 @@ function severityClasses(pct: number) {
       text: 'text-orange-700 dark:text-orange-300',
       ring: 'ring-orange-200 dark:ring-orange-500/30',
       badge: 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300',
-      label: 'Yuqori',
+      labelKey: 'ad.sev.high',
     }
   }
   return {
@@ -143,14 +135,14 @@ function severityClasses(pct: number) {
     text: 'text-amber-700 dark:text-amber-300',
     ring: 'ring-amber-200 dark:ring-amber-500/30',
     badge: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-    label: "O'rta",
+    labelKey: 'ad.sev.mid',
   }
 }
 
 function missedSeverity(n: number) {
-  if (n >= 7) return { label: 'Kritik', cls: 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30' }
-  if (n >= 5) return { label: 'Yuqori', cls: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/30' }
-  return { label: 'Ogohlantirish', cls: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30' }
+  if (n >= 7) return { key: 'ad.warn.critical', cls: 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30' }
+  if (n >= 5) return { key: 'ad.warn.high', cls: 'bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/30' }
+  return { key: 'ad.warn.notice', cls: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30' }
 }
 </script>
 
@@ -162,13 +154,14 @@ function missedSeverity(n: number) {
         class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
       >
         <ArrowLeftIcon class="size-4" />
-        Orqaga
+        {{ t('dd.back') }}
       </RouterLink>
 
       <div class="flex items-center gap-3">
         <h1 class="hidden text-base font-semibold text-slate-800 dark:text-slate-100 sm:block">
-          Davomat tafsilotlari
+          {{ t('ad.header') }}
         </h1>
+        <LangSwitcher />
         <ThemeToggle />
       </div>
     </header>
@@ -177,30 +170,29 @@ function missedSeverity(n: number) {
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Talabalar davomati
+            {{ t('ad.title') }}
           </h2>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Bugungi past davomatga ega guruhlar va surunkali davomatsiz talabalar
+            {{ t('ad.subtitle') }}
           </p>
         </div>
 
         <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <span class="font-medium">Fakultet:</span>
+          <span class="font-medium">{{ t('dd.faculty_label') }}</span>
           <select
             v-model="selectedFaculty"
             class="min-w-[200px] cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:border-slate-300 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-500 dark:focus:ring-sky-900/40"
           >
-            <option value="all">Barcha fakultetlar</option>
-            <option v-for="f in FACULTIES" :key="f.id" :value="f.id">{{ f.name }}</option>
+            <option value="all">{{ t('dd.all_faculties') }}</option>
+            <option v-for="id in FACULTY_IDS" :key="id" :value="id">{{ facultyName(id) }}</option>
           </select>
         </label>
       </div>
 
-      <!-- Stat cards -->
       <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Guruhlar</span>
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('ad.stat.groups') }}</span>
             <UsersIcon class="size-4 text-slate-400" />
           </div>
           <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{{ totals.groups }}</p>
@@ -208,7 +200,7 @@ function missedSeverity(n: number) {
 
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">O'rtacha davomat</span>
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('ad.stat.avg') }}</span>
             <TrendingDownIcon class="size-4 text-emerald-500" />
           </div>
           <p
@@ -221,7 +213,7 @@ function missedSeverity(n: number) {
 
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Bugun davomatsiz</span>
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('ad.stat.absent') }}</span>
             <CalendarXIcon class="size-4 text-orange-500" />
           </div>
           <p class="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">{{ totals.absentToday }}</p>
@@ -229,24 +221,23 @@ function missedSeverity(n: number) {
 
         <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Surunkali</span>
+            <span class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('ad.stat.chronic') }}</span>
             <UserXIcon class="size-4 text-rose-500" />
           </div>
           <p class="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{{ totals.chronic }}</p>
         </div>
       </div>
 
-      <!-- Lowest attendance groups -->
       <section class="mt-6 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
         <header class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <AlertTriangleIcon class="size-5 text-orange-500" />
             <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Eng past davomatli 5 ta guruh (bugun)
+              {{ t('ad.lowest.title') }}
             </h3>
           </div>
           <span class="text-xs text-slate-500 dark:text-slate-400">
-            {{ selectedFaculty === 'all' ? 'Barcha fakultetlar' : facultyName(selectedFaculty) }}
+            {{ selectedFaculty === 'all' ? t('dd.all_label') : facultyName(selectedFaculty) }}
           </span>
         </header>
 
@@ -264,11 +255,11 @@ function missedSeverity(n: number) {
                     class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ring-1 ring-inset"
                     :class="[severityClasses(g.attendance).badge, severityClasses(g.attendance).ring]"
                   >
-                    {{ severityClasses(g.attendance).label }}
+                    {{ t(severityClasses(g.attendance).labelKey) }}
                   </span>
                 </div>
                 <p class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
-                  {{ facultyName(g.facultyId) }} · {{ g.presentToday }}/{{ g.total }} qatnashdi · {{ g.absent }} kelmadi
+                  {{ facultyName(g.facultyId) }} · {{ t('ad.attended', { p: g.presentToday, t: g.total }) }} · {{ t('ad.absent_n', { n: g.absent }) }}
                 </p>
               </div>
               <div class="text-right">
@@ -288,24 +279,23 @@ function missedSeverity(n: number) {
           </div>
 
           <div v-if="!lowestGroups.length" class="rounded-lg border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-            Ushbu fakultet bo'yicha guruhlar topilmadi
+            {{ t('ad.empty.groups') }}
           </div>
         </div>
       </section>
 
-      <!-- Chronic absentees -->
       <section class="mt-6 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <header class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Surunkali davomatsizlar
+              {{ t('ad.table.title') }}
             </h3>
             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              Shu hafta 3 tadan ko'p darsni qoldirgan talabalar
+              {{ t('ad.table.subtitle') }}
             </p>
           </div>
           <span class="text-xs text-slate-500 dark:text-slate-400">
-            {{ filteredAbsentees.length }} ta talaba
+            {{ t('dd.students_count', { n: filteredAbsentees.length }) }}
           </span>
         </header>
 
@@ -314,11 +304,11 @@ function missedSeverity(n: number) {
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
               <tr>
                 <th class="px-5 py-3">#</th>
-                <th class="px-5 py-3">Talaba</th>
-                <th class="px-5 py-3">Guruh</th>
-                <th class="px-5 py-3">Fakultet</th>
-                <th class="px-5 py-3 text-center">Qoldirilgan darslar</th>
-                <th class="px-5 py-3 text-center">Ogohlantirish</th>
+                <th class="px-5 py-3">{{ t('dd.col.student') }}</th>
+                <th class="px-5 py-3">{{ t('dd.col.group') }}</th>
+                <th class="px-5 py-3">{{ t('dd.col.faculty') }}</th>
+                <th class="px-5 py-3 text-center">{{ t('ad.col.missed') }}</th>
+                <th class="px-5 py-3 text-center">{{ t('ad.col.warning') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -342,13 +332,13 @@ function missedSeverity(n: number) {
                     :class="missedSeverity(a.missed).cls"
                   >
                     <AlertTriangleIcon class="size-3" />
-                    {{ missedSeverity(a.missed).label }}
+                    {{ t(missedSeverity(a.missed).key) }}
                   </span>
                 </td>
               </tr>
               <tr v-if="!filteredAbsentees.length">
                 <td colspan="6" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Ushbu fakultet bo'yicha surunkali davomatsizlar topilmadi
+                  {{ t('ad.empty.absentees') }}
                 </td>
               </tr>
             </tbody>
